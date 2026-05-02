@@ -1,0 +1,67 @@
+---
+---
+
+# HiCSamProcessor
+
+```python
+class chr3d.HiCSamProcessor(
+    threads: int = 1,
+    min_mapq: int = 30,
+)
+```
+
+SAM/BAM processing for Hi-C data using samtools.
+
+Converts SAM to BAM and sorts by read name (required for pairtools).
+
+## Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **threads** | `int` | Number of threads for samtools (default: 1) |
+| **min_mapq** | `int` | Minimum mapping quality score (default: 30) |
+
+## Methods
+
+### process
+
+```python
+def process(
+    self,
+    input_sam: str,
+    output_bam: str,
+    stats_file: Optional[str] = None,
+    keep_unsorted: bool = False,
+) -> Dict[str, Any]
+```
+
+Convert SAM to sorted BAM.
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **input_sam** | `str` | Path to input SAM file |
+| **output_bam** | `str` | Path to output sorted BAM file |
+| **stats_file** | `Optional[str]` | Optional path to save BAM stats |
+| **keep_unsorted** | `bool` | Keep unsorted BAM file (default: `False`) |
+
+**Returns:**
+
+`Dict[str, Any]` with keys:
+- `'output_bam'`: Path to output BAM file
+- `'stats_file'`: Path to stats file
+- `'bam_size_bytes'`: Size of BAM file in bytes
+
+**Example:**
+
+```python
+import chr3d as c3d
+
+processor = c3d.HiCSamProcessor(threads=24, min_mapq=30)
+
+stats = processor.process(
+    input_sam="aligned.sam",
+    output_bam="sorted.bam"
+)
+```

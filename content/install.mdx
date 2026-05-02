@@ -1,75 +1,83 @@
 ---
-title: Install
 ---
 
 # Install
 
-Get the docs site running locally in a few steps.
+Get the Chr3D pipeline running locally.
 
 ## Prerequisites
 
-- **Node.js** 18.17 or newer
-- **pnpm** (recommended), or npm / yarn / bun
+- **Conda** (Miniconda or Anaconda)
+- **Git**
 
-## 1. Install dependencies
-
-```bash filename="Terminal"
-pnpm install
-```
-
-This installs Next.js, React, Nextra, and the `nextra-theme-docs` package.
-
-## 2. Start the dev server
+## 1. Clone the repository
 
 ```bash filename="Terminal"
-pnpm run dev
+git clone https://github.com/rudrajoshi2481/Chr3D.git
+cd Chr3D
 ```
 
-The site will be available at [http://localhost:3000](http://localhost:3000).
+## 2. Run the install script
 
-## 3. Build for production
+The repository includes an automated install script that sets up everything.
 
 ```bash filename="Terminal"
-pnpm run build
-pnpm run start
+chmod +x install.sh
+./install.sh
 ```
 
-## Project structure
+### What the script does:
 
-```text
-.
-├── app/
-│   ├── [[...mdxPath]]/
-│   │   └── page.tsx        # catch-all renders content/*.mdx
-│   ├── layout.tsx          # navbar, banner, footer, theme
-│   └── globals.css
-├── content/
-│   ├── index.mdx           # homepage
-│   └── install.mdx         # this page
-├── mdx-components.tsx      # MDX component overrides
-├── next.config.ts          # withNextra(...) wrapper
-└── package.json
+1. Configures conda channels (defaults, bioconda, conda-forge)
+2. Creates a conda environment named `chr3d` with Python 3.12
+3. Installs bioinformatics tools:
+   - BWA (alignment)
+   - SAMtools (BAM processing)
+   - MACS3 (peak calling)
+   - pairtools (Hi-C pairs processing)
+   - cooler (Hi-C matrix generation)
+   - cooltools (Hi-C analysis)
+4. Installs Python dependencies (numpy, pandas, scipy, biopython, pysam, etc.)
+5. Installs the Chr3D package in editable mode
+
+### Customize the environment name
+
+To use a different environment name, edit the `install.sh` file:
+
+```bash filename="install.sh"
+ENV_NAME="your_env_name"  # Change this line
 ```
 
-## Adding a new page
+## 3. Activate and use
 
-1. Create a new `.mdx` file inside `content/` — for example
-   `content/guides/setup.mdx`.
-2. The page will be served at `/guides/setup`.
-3. Optionally add a `_meta.js` file to control the sidebar order and titles.
-
-```js filename="content/_meta.js"
-export default {
-  index: 'Welcome',
-  install: 'Install',
-}
+```bash filename="Terminal"
+conda activate chr3d
+chr3d --help
 ```
+
+Or use the Python API:
+
+```python filename="Python"
+import chr3d as c3d
+print(c3d.__version__)
+```
+
+## Installed Tools
+
+| Tool | Purpose |
+|------|---------|
+| BWA | Sequence alignment |
+| SAMtools | BAM file processing |
+| MACS3 | Peak calling |
+| pairtools | Hi-C pairs processing |
+| cooler | Hi-C matrix generation |
+| cooltools | Hi-C analysis |
+| parasail | SIMD-accelerated alignment |
+| clodius | HiGlass tileset generation |
+| polars | Fast DataFrames |
 
 ## Troubleshooting
 
-- **Blank page or 404**: make sure the catch-all route
-  `app/[[...mdxPath]]/page.tsx` exists and that `next-mdx-import-source-file`
-  in `next.config.ts` points at your `mdx-components.tsx`.
-- **Multiple lockfiles warning**: remove stray `package-lock.json` /
-  `pnpm-lock.yaml` files from parent directories, or set
-  `turbopack.root` in `next.config.ts`.
+- **Conda not found**: Make sure conda is installed and initialized in your shell
+- **Permission denied**: Run `chmod +x install.sh` before executing
+- **Environment conflicts**: Remove existing environment with `conda env remove -n chr3d` before reinstalling

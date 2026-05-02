@@ -1,0 +1,59 @@
+---
+---
+
+# HiCQCAnalyzer
+
+```python
+class chr3d.HiCQCAnalyzer()
+```
+
+Quality control analyzer for Hi-C data.
+
+Parses and summarizes QC metrics from Hi-C pipeline outputs.
+
+## Methods
+
+### analyze
+
+```python
+def analyze(
+    self,
+    qc_dir: str,
+    output_dir: str,
+) -> Dict[str, Any]
+```
+
+Analyze QC metrics from pipeline outputs.
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **qc_dir** | `str` | Path to QC directory |
+| **output_dir** | `str` | Output directory for summary |
+
+### parse_alignment_stats
+
+```python
+def parse_alignment_stats(
+    self,
+    stats_file: str,
+) -> Dict[str, Any]
+```
+
+Parse samtools stats output file.
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **stats_file** | `str` | Path to samtools stats file |
+
+**Example:**
+
+```python
+import chr3d as c3d
+
+qc = c3d.HiCQCAnalyzer()
+stats = qc.analyze(qc_dir="results/qc", output_dir="results/summary")
+```

@@ -1,0 +1,89 @@
+---
+---
+
+# chr3d hichip
+
+```bash
+chr3d hichip [OPTIONS]
+```
+
+Run the HiChIP pipeline (align → dedup → MboI purify → background model).
+
+## Examples
+
+### Basic Example
+
+```bash
+# First generate fragments, then run HiChIP
+chr3d digest -e MboI -o hg38_MboI.bed /data/genomes/hg38.fa
+
+chr3d hichip \
+    --r1 sample_R1.fastq.gz \
+    --r2 sample_R2.fastq.gz \
+    --genome /data/genomes/hg38.fa \
+    --fragments hg38_MboI.bed \
+    --output-dir ./results/hichip \
+    --sample-id my_sample
+```
+
+### Advanced Example
+
+```bash
+chr3d hichip \
+    --r1 sample_R1.fastq.gz \
+    --r2 sample_R2.fastq.gz \
+    --genome /data/genomes/hg38.fa \
+    --fragments hg38_MboI.bed \
+    --output-dir ./results/hichip \
+    --sample-id my_sample \
+    --threads 48 \
+    --n-chunks 12 \
+    --min-insert 150 \
+    --background-samples 20000 \
+    --keep-intermediates \
+    --verbose
+```
+
+## Pipeline Steps
+
+1. FASTQ splitting into parallel chunks
+2. BWA MEM `-5SP -T0` alignment (per chunk, merged)
+3. BAM → BEDPE + 5' coordinate deduplication
+4. MboI restriction fragment purification
+5. Background model (randomised PETs, distance decay)
+
+## Arguments
+
+### Required Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `--genome FASTA` | BWA-indexed genome FASTA |
+| `--fragments BED` | Restriction fragment BED (e.g., MboI from `chr3d digest`) |
+| `--output-dir DIR` | Output directory |
+
+### Input Arguments
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `--r1 FASTQ` | — | R1 FASTQ file |
+| `--r2 FASTQ` | — | R2 FASTQ file |
+| `--sample-id STR` | `sample` | Sample identifier |
+
+### Processing Arguments
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `--threads INT` | `24` | Total CPU threads |
+| `--n-chunks INT` | `6` | Parallel BWA jobs — threads split evenly |
+| `--min-insert INT` | `100` | Min insert size for MboI purification (bp) |
+| `--background-samples INT` | `10000` | Background samples per template for loop calling |
+
+### Other Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `--keep-intermediates` | Keep per-chunk FASTQ/BAM files after merge |
+| `--start-from STEP` | Resume from step (1-6) |
+| `-v, --verbose` | Enable DEBUG-level logging |
+| `--log-file FILE` | Write log to FILE |

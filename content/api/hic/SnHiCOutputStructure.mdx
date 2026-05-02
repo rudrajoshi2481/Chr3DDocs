@@ -1,0 +1,27 @@
+---
+---
+
+# SnHiC Output Directory Structure
+
+When you run `SnHiCPipeline.run()`, the following directory structure is created:
+
+```
+output_dir/
+├── cells/
+│   ├── cell_001/
+│   │   ├── aligned/        (sorted BAM)
+│   │   ├── pairs/          (filtered .pairs.gz)
+│   │   └── matrices/       (per-cell .cool)
+│   └── cell_002/
+│       └── ...
+├── pseudobulk/
+│   ├── pseudobulk.cool
+│   └── pseudobulk.mcool
+├── clustering/
+│   ├── cell_bin_matrix.csv
+│   ├── embeddings.npy
+│   └── predictions.csv
+└── qc/
+    ├── cell_qc_summary.txt
+    └── passing_cells.txt
+```

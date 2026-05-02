@@ -1,0 +1,53 @@
+---
+---
+
+import { Callout } from 'nextra/components'
+
+# detect_restriction_enzyme
+
+```python
+chr3d.utils.detect_restriction_enzyme(
+    fastq_path: str,
+    max_reads: int = 1_000_000,
+) -> None
+```
+
+Detect which restriction enzyme was used in a Hi-C/HiChIP sample.
+
+Analyzes the first N reads of a paired-end FASTQ to identify which restriction enzyme(s) were used in the library preparation.
+
+<Callout type="info">
+**Logic:**
+1. **Enrichment test** — A restriction-enzyme cut site should appear at the start of reads far more often than at background positions (because biotin pull-down enriches for ligation junctions).
+2. **Junction test** — After fill-in and ligation, two identical overhangs are joined, producing a site+site junction (e.g., `GATCGATC` for MboI). The presence of these junctions at the read start is a definitive signature.
+3. **Positional profile** — The true enzyme shows a characteristic dual-peak pattern: a large peak at position 0 (cut site) and a second peak offset by len(site)+1 bases (partner ligation site).
+</Callout>
+
+<Callout type="warning">
+This tool is designed for **Hi-C** and **in-situ Hi-C** data where reads start at restriction enzyme cut sites. For **HiChIP / ChIA-PET** data, reads start at linker/adapter sequences. Run this tool on *trimmed* reads or after the linker-filtering step for accurate detection.
+</Callout>
+
+## Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **fastq_path** | `str` | Path to FASTQ file (R1 recommended) |
+| **max_reads** | `int` | Maximum reads to analyze (default: 1,000,000) |
+
+**Example:**
+
+```python
+from chr3d.utils import detect_restriction_enzyme
+
+# Analyze first 500k reads
+detect_restriction_enzyme(
+    fastq_path="sample_R1.fastq.gz",
+    max_reads=500_000
+)
+
+# Output includes:
+# - Positional profile for each candidate enzyme
+# - Enrichment fold-change at position 0
+# - Junction counts
+# - Recommended enzyme
+```

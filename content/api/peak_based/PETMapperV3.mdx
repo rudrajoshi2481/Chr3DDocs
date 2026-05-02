@@ -1,0 +1,166 @@
+---
+---
+
+# PETMapperV3
+
+```python
+class chr3d.peak_based.PETMapperV3(
+    genome_index: str,
+    mapping_quality_cutoff: int = 30,
+    n_threads: int = 4,
+    use_bwa_mem: bool = True,
+)
+```
+
+Maps ChIA-PET tags to reference genome and generates BEDPE files.
+
+**Workflow:**
+1. BWA paired-end alignment → SAM
+2. SAM → sorted BAM (coordinate sorted for stats)
+3. samtools flagstat → alignment statistics
+4. Name-sorted BAM → BEDPE
+5. Deduplicate BEDPE
+
+## Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **genome_index** | `str` | Path to BWA genome index |
+| **mapping_quality_cutoff** | `int` | Minimum mapping quality (default: 30) |
+| **n_threads** | `int` | Number of threads for BWA/SAMtools (default: 4) |
+| **use_bwa_mem** | `bool` | Use BWA-MEM (`True`) or BWA-ALN (`False`) (default: `True`) |
+
+## Methods
+
+### map_paired_fastq
+
+```python
+def map_paired_fastq(
+    self,
+    fastq_r1: str,
+    fastq_r2: str,
+    output_prefix: str,
+    output_dir: str = None,
+    keep_bam: bool = True,
+    remove_duplicates: bool = True,
+) -> Dict[str, Any]
+```
+
+Complete mapping workflow for paired FASTQ files.
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **fastq_r1** | `str` | Path to R1 FASTQ file |
+| **fastq_r2** | `str` | Path to R2 FASTQ file |
+| **output_prefix** | `str` | Prefix for output files |
+| **output_dir** | `str` | Output directory (default: current directory) |
+| **keep_bam** | `bool` | Keep intermediate BAM file (default: `True`) |
+| **remove_duplicates** | `bool` | Remove duplicate PETs (default: `True`) |
+
+**Returns:**
+
+`Dict[str, Any]` with keys:
+- `'output_bam'`: Path to BAM file
+- `'output_bedpe'`: Path to final BEDPE file
+- `'flagstat'`: samtools flagstat output path
+- `'total_reads'`, `'mapped_reads'`, `'dedup_bedpe'`: Statistics
+
+### run_bwa_mem
+
+```python
+def run_bwa_mem(
+    self,
+    fastq_r1: str,
+    fastq_r2: str,
+    output_bam: str,
+) -> bool
+```
+
+Run BWA-MEM and pipe to samtools for BAM output.
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **fastq_r1** | `str` | Path to R1 FASTQ file |
+| **fastq_r2** | `str` | Path to R2 FASTQ file |
+| **output_bam** | `str` | Path to output BAM file |
+
+**Returns:**
+
+`bool` — `True` if successful, `False` otherwise.
+
+### run_bwa_aln
+
+```python
+def run_bwa_aln(
+    self,
+    fastq_r1: str,
+    fastq_r2: str,
+    output_bam: str,
+) -> bool
+```
+
+Run BWA-ALN + SAMPE for short reads.
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **fastq_r1** | `str` | Path to R1 FASTQ file |
+| **fastq_r2** | `str` | Path to R2 FASTQ file |
+| **output_bam** | `str` | Path to output BAM file |
+
+**Returns:**
+
+`bool` — `True` if successful, `False` otherwise.
+
+### remove_duplicates
+
+```python
+def remove_duplicates(
+    self,
+    input_bedpe: str,
+    output_bedpe: str,
+) -> int
+```
+
+Remove duplicate PETs by coordinate.
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **input_bedpe** | `str` | Path to input BEDPE file |
+| **output_bedpe** | `str` | Path to output deduplicated BEDPE file |
+
+**Returns:**
+
+`int` — Number of duplicate PETs removed.
+
+**Example:**
+
+```python
+from chr3d.peak_based import PETMapperV3
+
+mapper = PETMapperV3(
+    genome_index="/data/genomes/hg38.fa",
+    mapping_quality_cutoff=30,
+    n_threads=24,
+    use_bwa_mem=True,
+)
+
+stats = mapper.map_paired_fastq(
+    fastq_r1="sample_R1.fastq.gz",
+    fastq_r2="sample_R2.fastq.gz",
+    output_prefix="sample",
+    output_dir="mapped/",
+    keep_bam=True,
+    remove_duplicates=True,
+)
+
+print(f"Dedup BEDPE: {stats['dedup_bedpe']}")
+print(f"Duplicates removed: {stats.get('duplicates_removed', 0)}")
+```

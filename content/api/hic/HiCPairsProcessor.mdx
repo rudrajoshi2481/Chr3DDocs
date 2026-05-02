@@ -1,0 +1,174 @@
+---
+---
+
+# HiCPairsProcessor
+
+```python
+class chr3d.HiCPairsProcessor(
+    chrom_sizes: str,
+    assembly: str = 'hg38',
+    threads: int = 1,
+    fragment_bed: Optional[str] = None,
+)
+```
+
+Hi-C pairs processing using pairtools.
+
+Provides methods for each pairtools step: parse, sort, dedup, filter.
+
+## Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **chrom_sizes** | `str` | Path to chromosome sizes file |
+| **assembly** | `str` | Genome assembly name (default: `'hg38'`) |
+| **threads** | `int` | Number of threads (default: 1) |
+| **fragment_bed** | `Optional[str]` | Path to restriction fragment BED file for fragment-aware pair parsing (default: `None`) |
+
+## Methods
+
+### parse
+
+```python
+def parse(
+    self,
+    input_bam: str,
+    output_pairs: str,
+    stats_file: Optional[str] = None,
+) -> Dict[str, Any]
+```
+
+Parse BAM to pairs format.
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **input_bam** | `str` | Path to sorted BAM file |
+| **output_pairs** | `str` | Path to output pairs file (`.pairs.gz`) |
+| **stats_file** | `Optional[str]` | Optional path to save parsing stats |
+
+**Returns:**
+
+`Dict[str, Any]` with keys:
+- `'output_pairs'`: Path to output pairs file
+- `'stats_file'`: Path to stats file
+
+### sort
+
+```python
+def sort(
+    self,
+    input_pairs: str,
+    output_pairs: str,
+    tmp_dir: Optional[str] = None,
+) -> Dict[str, Any]
+```
+
+Sort pairs by genomic position.
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **input_pairs** | `str` | Path to input pairs file |
+| **output_pairs** | `str` | Path to output sorted pairs file |
+| **tmp_dir** | `Optional[str]` | Temporary directory for sorting |
+
+### dedup
+
+```python
+def dedup(
+    self,
+    input_pairs: str,
+    output_pairs: str,
+    stats_file: Optional[str] = None,
+) -> Dict[str, Any]
+```
+
+Remove PCR duplicates.
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **input_pairs** | `str` | Path to sorted pairs file |
+| **output_pairs** | `str` | Path to output deduplicated pairs file |
+| **stats_file** | `Optional[str]` | Optional path to save dedup stats |
+
+### filter
+
+```python
+def filter(
+    self,
+    input_pairs: str,
+    output_pairs: str,
+    pair_types: List[str] = None,
+) -> Dict[str, Any]
+```
+
+Filter pairs by pair type.
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **input_pairs** | `str` | Path to deduplicated pairs file |
+| **output_pairs** | `str` | Path to output filtered pairs file |
+| **pair_types** | `List[str]` | List of pair types to keep (default: `['UU', 'UR', 'RU']`) |
+
+### restrict
+
+```python
+def restrict(
+    self,
+    input_pairs: str,
+    output_pairs: str,
+) -> Dict[str, Any]
+```
+
+Annotate restriction fragments on a pairs file. Requires `fragment_bed` to have been set at construction.
+
+### process_all
+
+```python
+def process_all(
+    self,
+    input_bam: str,
+    output_dir: str,
+    prefix: str = "sample",
+    cleanup: bool = True,
+) -> Dict[str, Any]
+```
+
+Run all pairtools steps in sequence.
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **input_bam** | `str` | Path to sorted BAM file |
+| **output_dir** | `str` | Output directory |
+| **prefix** | `str` | Output file prefix (default: `'sample'`) |
+| **cleanup** | `bool` | Remove intermediate files (default: `True`) |
+
+**Example:**
+
+```python
+import chr3d as c3d
+
+pairs = c3d.HiCPairsProcessor(
+    chrom_sizes="/data/genomes/hg38.chrom.sizes",
+    assembly="hg38",
+    threads=24
+)
+
+# Run individual steps
+pairs.parse("sorted.bam", "parsed.pairs.gz")
+pairs.sort("parsed.pairs.gz", "sorted.pairs.gz")
+pairs.dedup("sorted.pairs.gz", "dedup.pairs.gz")
+pairs.filter("dedup.pairs.gz", "filtered.pairs.gz")
+
+# Or run all steps at once
+stats = pairs.process_all("sorted.bam", output_dir="results/")
+```

@@ -1,0 +1,107 @@
+---
+---
+
+# chr3d sn-hic
+
+```bash
+chr3d sn-hic [OPTIONS]
+```
+
+Run the single-nucleus Hi-C pipeline over multiple cells from a manifest file.
+
+## Examples
+
+### Basic Example
+
+```bash
+chr3d sn-hic \
+    --manifest cells.tsv \
+    --genome /data/genomes/hg38.fa \
+    --chrom-sizes /data/genomes/hg38.chrom.sizes \
+    --output-dir ./results/sn_hic \
+    --threads 24
+```
+
+### Advanced Example
+
+```bash
+chr3d sn-hic \
+    --manifest cells.tsv \
+    --genome /data/genomes/hg38.fa \
+    --chrom-sizes /data/genomes/hg38.chrom.sizes \
+    --output-dir ./results/sn_hic \
+    --threads 24 \
+    --min-contacts 5000 \
+    --resolutions 1000,5000,10000,25000,50000,100000 \
+    --keep-intermediates \
+    --verbose
+```
+
+## Pipeline Steps
+
+**Per-cell (run for EACH cell in the manifest):**
+1. **Alignment** — BWA MEM → SAM
+2. **SAM/BAM** — samtools sort/index → sorted BAM + flagstat
+3. **Pairs** — pairtools parse/sort/dedup/filter → `.pairs.gz`
+4. **Matrix** — cooler cload/zoomify → per-cell `.cool`
+
+**After all cells:**
+5. **Cell QC** — Filter cells by min-contacts threshold
+6. **Pseudobulk** — cooler merge passing cells → pseudobulk `.cool` + `.mcool`
+
+## Manifest Format
+
+Tab-separated file (no header):
+```
+cell_id    R1.fastq.gz    R2.fastq.gz
+```
+
+## Output Layout
+
+```
+<output-dir>/
+├── cells/
+│   ├── <cell_id>/
+│   │   ├── aligned/     sorted BAM
+│   │   ├── pairs/       .pairs.gz
+│   │   └── matrices/    per-cell .cool
+│   └── ...
+├── pseudobulk/          pseudobulk.cool + pseudobulk.mcool
+└── qc/                  cell_qc_summary.txt + passing_cells.txt
+```
+
+## Arguments
+
+### Required Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `--manifest TSV` | Tab-separated manifest: `cell_id  R1.fastq.gz  R2.fastq.gz` |
+| `--genome PATH` | BWA-indexed genome FASTA |
+| `--chrom-sizes PATH` | Chromosome sizes file |
+| `--output-dir DIR` | Output directory |
+
+### Processing Arguments
+
+Same as `bulk-hic`:
+- `--threads N` (default: 4)
+- `--splits N` (default: 0)
+- `--assembly NAME` (default: hg38)
+- `--min-mapq INT` (default: 30)
+- `--min-distance BP` (default: 1000)
+- `--resolutions CSV` (default: 1000,5000,10000)
+
+### Cell QC Arguments
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `--min-contacts INT` | `1000` | Minimum valid contacts to keep a cell |
+
+### Other Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `--keep-intermediates` | Keep intermediate files |
+| `--start-from STEP` | Resume from step (1-6) |
+| `-v, --verbose` | Enable DEBUG-level logging |
+| `--log-file FILE` | Write log to FILE |

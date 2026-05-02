@@ -1,0 +1,103 @@
+---
+---
+
+# RestrictionSiteGenerator
+
+```python
+class chr3d.RestrictionSiteGenerator(
+    enzyme: Union[str, List[str]],
+    min_frag_size: int = 20,
+    max_frag_size: int = 1000000,
+)
+```
+
+Generate restriction fragment coordinates from genome FASTA.
+
+This class parses restriction enzyme recognition sites and scans a genome FASTA file to identify all restriction sites, creating fragments between consecutive cut positions.
+
+## Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **enzyme** | `Union[str, List[str]]` | Enzyme name (e.g., `'MboI'`) or recognition site (e.g., `'^GATC'`). Can be a list for multiple enzymes. |
+| **min_frag_size** | `int` | Minimum fragment length to keep (default: 20bp) |
+| **max_frag_size** | `int` | Maximum fragment length to keep (default: 1Mb) |
+
+## Class Attributes
+
+### COMMON_ENZYMES
+
+```python
+RestrictionSiteGenerator.COMMON_ENZYMES = {
+    'MboI': '^GATC',
+    'HindIII': 'A^AGCTT',
+    'DpnII': '^GATC',
+    'BglII': 'A^GATCT',
+    'Sau3AI': '^GATC',
+    'Hinf1': 'G^ANTC',
+    'NlaIII': 'CATG^',
+    'AluI': 'AG^CT',
+    'EcoRI': 'G^AATTC',
+    'BamHI': 'G^GATCC',
+    'PstI': 'CTGCA^G',
+    'SalI': 'G^TCGAC',
+    'XbaI': 'T^CTAGA'
+}
+```
+
+Dictionary of common restriction enzymes and their recognition sites.
+
+## Methods
+
+### generate_sites
+
+```python
+def generate_sites(
+    self,
+    genome_fasta: str,
+    output_file: str,
+) -> Dict[str, Any]
+```
+
+Generate restriction fragment file from genome FASTA.
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **genome_fasta** | `str` | Path to genome FASTA file |
+| **output_file** | `str` | Path to output BED file |
+
+**Returns:**
+
+`Dict[str, Any]` containing:
+- `'total_fragments'`: Total fragments found
+- `'filtered_fragments'`: Fragments filtered by size
+- `'chromosomes'`: Number of chromosomes processed
+- `'total_sites'`: Total restriction sites found
+- `'fragments_by_chr'`: Dictionary mapping chromosome → fragment count
+
+**Example:**
+
+```python filename="generate_fragments.py"
+import chr3d as c3d
+
+# Single enzyme
+generator = c3d.RestrictionSiteGenerator(
+    enzyme="MboI",
+    min_frag_size=20,
+    max_frag_size=1000000
+)
+
+stats = generator.generate_sites(
+    genome_fasta="/data/genomes/hg38.fa",
+    output_file="hg38_MboI_fragments.bed"
+)
+
+print(f"Generated {stats['total_fragments']:,} fragments")
+
+# Multiple enzymes
+generator = c3d.RestrictionSiteGenerator(
+    enzyme=["MboI", "HindIII"]
+)
+```

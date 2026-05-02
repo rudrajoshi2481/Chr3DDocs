@@ -1,0 +1,30 @@
+---
+---
+
+# verify_positions
+
+```python
+chr3d.utils.verify_positions(
+    bedpe_df: pl.DataFrame,
+    bedpedb_path: str,
+    chromsizes_path: str,
+    n_samples: int = 20,
+) -> bool
+```
+
+Verify that bedpedb entries match BEDPE coordinates.
+
+bedpedb stores coordinates as global genome offsets. Re-derives the offset from the chromsizes file and compares to a random sample.
+
+## Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **bedpe_df** | `pl.DataFrame` | Polars DataFrame with BEDPE data |
+| **bedpedb_path** | `str` | Path to bedpedb file |
+| **chromsizes_path** | `str` | Path to chromosome sizes file |
+| **n_samples** | `int` | Number of random entries to verify (default: 20) |
+
+**Returns:**
+
+`bool` — `True` if all samples match, `False` otherwise.

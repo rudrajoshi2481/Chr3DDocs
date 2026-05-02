@@ -1,0 +1,46 @@
+---
+---
+
+# restriction_site_generator
+
+```python
+chr3d.utils.restriction_site_generator(
+    enzyme: Union[str, List[str]],
+    genome_fasta: str,
+    output_file: str,
+    min_frag_size: int = 20,
+    max_frag_size: int = 1_000_000,
+) -> Dict[str, Any]
+```
+
+Generate restriction fragment BED from a genome FASTA.
+
+One-call wrapper around `RestrictionSiteGenerator`. Convenient function API for generating restriction fragments without instantiating a class.
+
+## Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **enzyme** | `Union[str, List[str]]` | Enzyme name (e.g., `'MboI'`), recognition site (e.g., `'^GATC'`), or list for multiple enzymes |
+| **genome_fasta** | `str` | Path to genome FASTA file (must be indexed with samtools faidx or pyfaidx) |
+| **output_file** | `str` | Path to output fragment BED file |
+| **min_frag_size** | `int` | Minimum fragment length to keep (default: 20 bp) |
+| **max_frag_size** | `int` | Maximum fragment length to keep (default: 1 Mb) |
+
+**Returns:**
+
+`Dict[str, Any]` — Statistics dictionary with fragment counts per chromosome.
+
+**Example:**
+
+```python filename="generate_fragments.py"
+from chr3d.utils import restriction_site_generator
+
+stats = restriction_site_generator(
+    enzyme="MboI",
+    genome_fasta="/data/genomes/hg38.fa",
+    output_file="hg38_MboI_fragments.bed",
+)
+
+print(f"Fragments: {stats['total_fragments']:,}")
+```

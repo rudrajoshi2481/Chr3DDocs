@@ -1,0 +1,131 @@
+---
+---
+
+# chr3d chia-pet
+
+```bash
+chr3d chia-pet [OPTIONS]
+```
+
+Run the ChIA-PET pipeline (linker filtering → mapping → peak calling → loop calling).
+
+## Examples
+
+### Basic Example
+
+```bash
+chr3d chia-pet \
+    --r1 sample_R1.fastq.gz \
+    --r2 sample_R2.fastq.gz \
+    --genome /data/genomes/hg38.fa \
+    --linkers ACGCGATATCGCG \
+    --output-dir ./results/chiapet \
+    --sample-id my_sample
+```
+
+### Advanced Example
+
+```bash
+chr3d chia-pet \
+    --r1 sample_R1.fastq.gz \
+    --r2 sample_R2.fastq.gz \
+    --genome /data/genomes/hg38.fa \
+    --linkers ACGCGATATCGCG,CACTGTGGCTGTGTGG \
+    --output-dir ./results/chiapet \
+    --sample-id my_sample \
+    --threads 24 \
+    --mapq 30 \
+    --min-score 25 \
+    --min-tag 18 \
+    --max-tag 50 \
+    --genome-size hs \
+    --qvalue 0.01 \
+    --alpha 0.05 \
+    --standard-chroms \
+    --cytoband /data/annotations/cytoBand_hg38.txt \
+    --keep-intermediates \
+    --verbose
+```
+
+## Pipeline Steps
+
+1. **Linker filtering** — parasail SIMD → filtered FASTQ (same-linker PETs)
+2. **Mapping** — BWA MEM → BAM + BEDPE (deduplicated)
+3. **Peak calling** — MACS3 → broadPeak / narrowPeak
+4. **Background model**
+   - `classify_pets` → P2P / P2D / D2D PET files
+   - `extract_templates` → templates.csv
+   - NB sampling → templates_with_nb.csv
+   - p-values → templates_with_pvalues.csv
+   - FDR correction → significant_loops.csv
+
+## Output Layout
+
+```
+<output-dir>/
+├── filtered/          per-linker-category FASTQ + merged filtered FASTQ
+├── mapped/            BAM, BEDPE, dedup BEDPE + flagstat
+├── peaks/             MACS3 broadPeak + summits
+├── loops/
+│   ├── classified/    P2P / P2D / D2D PET files
+│   ├── templates/     templates.csv, NB params, p-values
+│   └── results/       significant_loops.csv
+└── qc/                pipeline_summary.txt
+```
+
+## Arguments
+
+### Required Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `--genome PATH` | BWA-indexed genome FASTA |
+| `--linkers SEQ[,SEQ]` | Comma-separated linker sequence(s) (e.g., `ACGCGATATCGCG`) |
+| `--output-dir DIR` | Output directory |
+
+### Input Arguments
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `--r1 FASTQ` | — | R1 FASTQ file (required unless `--start-from` > 1) |
+| `--r2 FASTQ` | — | R2 FASTQ file (required unless `--start-from` > 1) |
+| `--sample-id STR` | `sample` | Sample identifier |
+
+### Linker Filtering Arguments
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `--min-score INT` | `20` | Minimum parasail alignment score |
+| `--min-tag INT` | `15` | Minimum genomic tag length after linker removal |
+| `--max-tag INT` | `40` | Maximum genomic tag length after linker removal |
+
+### Mapping Arguments
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `--mapq INT` | `30` | Minimum mapping quality |
+| `--threads N` | `4` | CPU threads for BWA / samtools |
+
+### Peak Calling Arguments
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `--genome-size STR` | `hs` | MACS3 genome size: `hs`, `mm`, or integer |
+| `--qvalue FLOAT` | `0.05` | MACS3 q-value cutoff |
+
+### Loop Calling Arguments
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `--alpha FLOAT` | `0.05` | FDR significance threshold |
+| `--standard-chroms` | — | Restrict loop calling to chr1-22 + chrX/Y |
+| `--cytoband FILE` | — | UCSC cytoband file for centromere exclusion |
+
+### Other Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `--keep-intermediates` | Keep intermediate BAM files |
+| `--start-from STEP` | Resume from step (1-4) |
+| `-v, --verbose` | Enable DEBUG-level logging |
+| `--log-file FILE` | Write log to FILE |

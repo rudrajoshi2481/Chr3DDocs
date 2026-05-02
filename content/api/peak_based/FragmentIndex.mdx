@@ -1,0 +1,47 @@
+---
+---
+
+# FragmentIndex
+
+```python
+class chr3d.peak_based.purifying.FragmentIndex(
+    bed_path: str,
+)
+```
+
+In-memory index of restriction fragments for fast overlap lookup.
+
+Uses `bisect` for O(log N) overlap queries against a sorted interval list. Chromosomes are stored in separate lists to avoid cross-chromosome comparisons.
+
+## Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **bed_path** | `str` | Path to BED file with restriction fragments |
+
+## Methods
+
+### find_overlapping
+
+```python
+def find_overlapping(
+    self,
+    chrom: str,
+    start: int,
+    end: int,
+) -> Optional[Tuple[int, int, int]]
+```
+
+Find a fragment overlapping the interval `[start, end)` on `chrom`.
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **chrom** | `str` | Chromosome name |
+| **start** | `int` | Interval start position (0-based) |
+| **end** | `int` | Interval end position (exclusive) |
+
+**Returns:**
+
+`Optional[Tuple[int, int, int]]` — `(start, end, frag_idx)` of the overlapping fragment, or `None` if no overlap.

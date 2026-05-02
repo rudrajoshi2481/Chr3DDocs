@@ -1,0 +1,157 @@
+---
+---
+
+# chr3d bulk-hic
+
+```bash
+chr3d bulk-hic [OPTIONS]
+```
+
+Run the complete bulk Hi-C pipeline for a single sample.
+
+## Examples
+
+### Basic Example
+
+```bash
+chr3d bulk-hic \
+    --r1 sample_R1.fastq.gz \
+    --r2 sample_R2.fastq.gz \
+    --genome /data/genomes/hg38.fa \
+    --chrom-sizes /data/genomes/hg38.chrom.sizes \
+    --output-dir ./results/my_sample \
+    --sample-id my_sample
+```
+
+### Advanced Example
+
+```bash
+chr3d bulk-hic \
+    --r1 sample_R1.fastq.gz \
+    --r2 sample_R2.fastq.gz \
+    --genome /data/genomes/hg38.fa \
+    --chrom-sizes /data/genomes/hg38.chrom.sizes \
+    --output-dir ./results/my_sample \
+    --sample-id my_sample \
+    --restriction-enzyme MboI \
+    --threads 24 \
+    --resolutions 1000,5000,10000,25000,50000,100000 \
+    --tad-windows 30000,50000,100000,200000,500000,1000000 \
+    --loop-fdr 0.05 \
+    --compartment-phasing-track /data/annotations/gene_density.bed \
+    --keep-intermediates \
+    --verbose
+```
+
+### Resume from Pairs Step
+
+```bash
+chr3d bulk-hic \
+    --genome /data/genomes/hg38.fa \
+    --chrom-sizes /data/genomes/hg38.chrom.sizes \
+    --output-dir ./results/my_sample \
+    --start-from 3
+```
+
+## Pipeline Steps
+
+1. **Alignment** — BWA MEM → SAM
+2. **SAM/BAM** — samtools sort/index → sorted BAM + flagstat
+3. **Pairs** — pairtools parse/sort/dedup/filter → `.pairs.gz`
+4. **Matrix** — cooler cload/zoomify → `.cool` + `.mcool`
+5. **TADs** — insulation score calling (optional)
+6. **Loops** — Hi-C loop calling (optional)
+7. **Compartments** — A/B compartment calling (optional)
+
+## Output Layout
+
+```
+<output-dir>/
+├── aligned/          sorted BAM + flagstat
+├── pairs/            .pairs.gz files
+├── matrices/         .cool + .mcool
+├── tads/             TAD calls (if enabled)
+├── loops/            Loop calls (if enabled)
+└── compartments/     Compartment calls (if enabled)
+```
+
+## Arguments
+
+### Required Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `--genome PATH` | BWA-indexed genome FASTA (e.g., `/ref/hg38.fa`) |
+| `--chrom-sizes PATH` | Chromosome sizes file (e.g., `hg38.chrom.sizes`) |
+| `--output-dir DIR` | Output directory (created if it does not exist) |
+
+### Input Arguments
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `--r1 FASTQ` | — | R1 FASTQ file (required unless `--start-from` > 1) |
+| `--r2 FASTQ` | — | R2 FASTQ file (required unless `--start-from` > 1) |
+| `--sample-id STR` | `sample` | Sample identifier used in output file names |
+
+### Processing Arguments
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `--threads N` | `4` | Number of CPU threads |
+| `--splits N` | `0` | Split FASTQ into N chunks for parallel alignment; 0 = no splitting |
+| `--assembly NAME` | `hg38` | Genome assembly name written into `.cool` metadata |
+
+### Filtering Arguments
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `--min-mapq INT` | `30` | Minimum BWA mapping quality |
+| `--min-distance BP` | `1000` | Minimum pair distance in bp |
+| `--resolutions CSV` | `1000,5000,10000` | Comma-separated list of matrix resolutions in bp |
+
+### TAD Calling Arguments
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `--no-tads` | — | Skip TAD / insulation score calling |
+| `--tad-windows CSV` | — | Comma-separated insulation window sizes in bp (default: `30000,50000,100000,200000,500000,1000000`) |
+
+### Loop Calling Arguments
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `--no-loops` | — | Skip Hi-C loop calling |
+| `--loop-fdr FLOAT` | `0.1` | FDR threshold for loop significance |
+
+### Restriction Enzyme Arguments
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `--restriction-enzyme NAME_OR_SITE` | — | Restriction enzyme name (`HindIII`, `DpnII`, `MboI`, `BglII`, `Arima`) or recognition site with cut position (e.g., `A^AGCTT`). Use `"none"` for DNase Hi-C / Micro-C |
+| `--fragment-bed BED` | — | Pre-computed restriction fragment BED file. If provided with `--restriction-enzyme`, skips auto-generation |
+
+### Compartment Calling Arguments
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `--no-compartments` | — | Skip A/B compartment calling |
+| `--compartment-phasing-track BED` | — | BED file (chrom,start,end,value) to orient E1 sign, e.g., gene density track |
+
+### Output Control
+
+| Argument | Description |
+|----------|-------------|
+| `--keep-intermediates` | Keep intermediate BAM / pairs files (default: delete them) |
+
+### Resume Arguments
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `--start-from STEP` | `1` | Resume from step N (1-7). 1=alignment, 2=SAM/BAM, 3=pairs, 4=matrix, 5=TADs, 6=loops, 7=compartments |
+
+### Logging Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `-v, --verbose` | Enable DEBUG-level logging |
+| `--log-file FILE` | Write log to FILE in addition to stdout |

@@ -1,0 +1,86 @@
+---
+---
+
+# HiChIPPipeline
+
+```python
+class chr3d.peak_based.hichip_pipline.HiChIPPipeline(
+    genome_index: str,
+    linkers: list,
+    threads: int = 4,
+    mapq: int = 30,
+    genome_size: str = 'hs',
+    qvalue: float = 0.05,
+    alpha: float = 0.05,
+    min_score: int = 20,
+    min_tag: int = 15,
+    max_tag: int = 40,
+)
+```
+
+End-to-end HiChIP pipeline orchestrator.
+
+Similar to ChIA-PET pipeline but optimized for HiChIP data with restriction fragment-based purification.
+
+## Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **genome_index** | `str` | Path to BWA-indexed genome FASTA |
+| **linkers** | `list` | One or more linker sequences to filter against |
+| **threads** | `int` | CPU threads for BWA / samtools / linker filtering (default: 4) |
+| **mapq** | `int` | Minimum mapping quality for BAM filtering (default: 30) |
+| **genome_size** | `str` | MACS3 genome size string (default: `'hs'`) |
+| **qvalue** | `float` | MACS3 q-value cutoff (default: 0.05) |
+| **alpha** | `float` | FDR significance threshold (default: 0.05) |
+| **min_score** | `int` | Minimum parasail alignment score (default: 20) |
+| **min_tag** | `int` | Minimum tag length after linker removal (default: 15) |
+| **max_tag** | `int` | Maximum tag length after linker removal (default: 40) |
+
+## Methods
+
+### run
+
+```python
+def run(
+    self,
+    fastq_r1: str,
+    fastq_r2: str,
+    output_dir: str,
+    sample_id: str,
+    fragment_bed: str,
+) -> Dict[str, Any]
+```
+
+Run the full HiChIP pipeline.
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **fastq_r1** | `str` | Path to R1 FASTQ file |
+| **fastq_r2** | `str` | Path to R2 FASTQ file |
+| **output_dir** | `str` | Output directory |
+| **sample_id** | `str` | Sample identifier |
+| **fragment_bed** | `str` | Path to restriction fragment BED file |
+
+**Example:**
+
+```python
+from chr3d.peak_based.hichip_pipline import HiChIPPipeline
+
+pipeline = HiChIPPipeline(
+    genome_index="/data/genomes/hg38.fa",
+    linkers=["GATCGATC"],  # MboI site
+    threads=24,
+    mapq=30,
+)
+
+stats = pipeline.run(
+    fastq_r1="sample_R1.fastq.gz",
+    fastq_r2="sample_R2.fastq.gz",
+    output_dir="hichip_results/",
+    sample_id="sample1",
+    fragment_bed="hg38_MboI_fragments.bed",
+)
+```

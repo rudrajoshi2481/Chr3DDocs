@@ -1,0 +1,46 @@
+---
+---
+
+# csv_to_bedpe
+
+```python
+chr3d.utils.csv_to_bedpe(
+    loops_csv: str,
+    peaks_path: str,
+    output_bedpe: str,
+    p_value_col: str = "p_adj_fdr_bh",
+    significant_col: str = "significant_fdr_bh",
+    canonical_chroms_only: bool = True,
+    max_score: float = 300.0,
+) -> Tuple[pl.DataFrame, dict]
+```
+
+Convert loops CSV → BEDPE with importance score = -log10(p_value).
+
+Uses Polars for fast, multi-threaded data processing. Returns both the final DataFrame and a statistics dictionary. Writes BEDPE to disk.
+
+## Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **loops_csv** | `str` | Path to loops CSV file |
+| **peaks_path** | `str` | Path to narrowPeak file |
+| **output_bedpe** | `str` | Path for output BEDPE file |
+| **p_value_col** | `str` | Column name for p-values (default: `"p_adj_fdr_bh"`) |
+| **significant_col** | `str` | Column name for significance flag (default: `"significant_fdr_bh"`) |
+| **canonical_chroms_only** | `bool` | Filter to canonical chromosomes (default: `True`) |
+| **max_score** | `float` | Maximum -log10(p) score (default: 300) |
+
+**Returns:**
+
+`Tuple[pl.DataFrame, dict]` — `(bedpe_dataframe, stats_dict)`
+
+**Statistics keys:**
+- `'n_peaks'`: Number of peaks loaded
+- `'n_loops_raw'`: Raw loops in CSV
+- `'n_loops_significant'`: Loops passing significance filter
+- `'n_after_join'`: Loops after joining peaks
+- `'n_chrom_mismatch'`: Chromosome mismatches dropped
+- `'n_swapped'`: Pairs reordered (start1 > start2)
+- `'n_final'`: Final BEDPE rows
+- `'total_seconds'`: Processing time

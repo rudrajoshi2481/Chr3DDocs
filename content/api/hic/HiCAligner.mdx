@@ -1,0 +1,71 @@
+---
+---
+
+# HiCAligner
+
+```python
+class chr3d.HiCAligner(
+    genome_index: str,
+    threads: int = 1,
+)
+```
+
+Hi-C alignment using BWA MEM with Hi-C specific parameters.
+
+Uses BWA MEM with `-SP5M` flags optimized for Hi-C chimeric reads.
+
+## Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **genome_index** | `str` | Path to BWA-indexed genome FASTA |
+| **threads** | `int` | Number of threads for BWA (default: 1) |
+
+## Methods
+
+### align
+
+```python
+def align(
+    self,
+    fastq1: str,
+    fastq2: str,
+    output_sam: str,
+    stats_file: Optional[str] = None,
+) -> Dict[str, Any]
+```
+
+Run BWA MEM alignment for Hi-C data.
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **fastq1** | `str` | Path to R1 FASTQ file |
+| **fastq2** | `str` | Path to R2 FASTQ file |
+| **output_sam** | `str` | Path to output SAM file |
+| **stats_file** | `Optional[str]` | Optional path to save alignment stats |
+
+**Returns:**
+
+`Dict[str, Any]` with keys:
+- `'output_sam'`: Path to output SAM file
+- `'stats_file'`: Path to stats file
+- `'sam_size_bytes'`: Size of SAM file in bytes
+
+**Example:**
+
+```python
+import chr3d as c3d
+
+aligner = c3d.HiCAligner(
+    genome_index="/data/genomes/hg38.fa",
+    threads=24
+)
+
+stats = aligner.align(
+    fastq1="sample_R1.fastq.gz",
+    fastq2="sample_R2.fastq.gz",
+    output_sam="aligned.sam"
+)
+```

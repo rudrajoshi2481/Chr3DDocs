@@ -1,0 +1,39 @@
+---
+---
+
+# Complete Workflow Example
+
+```python
+import chr3d as c3d
+from chr3d.utils import restriction_site_generator, loops_to_beddb
+
+# Step 1: Generate restriction fragments
+stats = restriction_site_generator(
+    enzyme="MboI",
+    genome_fasta="/data/genomes/hg38.fa",
+    output_file="hg38_MboI_fragments.bed",
+)
+
+# Step 2: Run Hi-C pipeline
+hic = c3d.HiCPipeline(
+    genome_index="/data/genomes/hg38.fa",
+    chrom_sizes="/data/genomes/hg38.chrom.sizes",
+    threads=24,
+    fragment_bed="hg38_MboI_fragments.bed",  # Enable fragment-aware processing
+)
+
+hic_stats = hic.run(
+    fastq1="sample_R1.fastq.gz",
+    fastq2="sample_R2.fastq.gz",
+    output_dir="results/",
+)
+
+# Step 3: Convert loops to HiGlass format
+loop_stats = loops_to_beddb(
+    loops_csv="results/loops/significant_loops.csv",
+    peaks_path="results/peaks/peaks.narrowPeak",
+    output_bedpe="results/loops/loops.bedpe",
+    output_bedpedb="results/loops/loops.bedpedb",
+    chromsizes_path="/data/genomes/hg38.chrom.sizes",
+)
+```

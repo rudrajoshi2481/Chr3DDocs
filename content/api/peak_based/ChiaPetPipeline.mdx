@@ -1,0 +1,100 @@
+---
+---
+
+# ChiaPetPipeline
+
+```python
+class chr3d.peak_based.ChiaPetPipeline(
+    genome_index: str,
+    linkers: list,
+    threads: int = 4,
+    mapq: int = 30,
+    genome_size: str = 'hs',
+    qvalue: float = 0.05,
+    alpha: float = 0.05,
+    min_score: int = 20,
+    min_tag: int = 15,
+    max_tag: int = 40,
+    standard_chroms_only: bool = True,
+    cytoband_file: Optional[str] = None,
+    keep_intermediates: bool = False,
+)
+```
+
+End-to-end ChIA-PET pipeline orchestrator.
+
+## Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **genome_index** | `str` | Path to BWA-indexed genome FASTA |
+| **linkers** | `list` | One or more linker sequences to filter against |
+| **threads** | `int` | CPU threads for BWA / samtools / linker filtering (default: 4) |
+| **mapq** | `int` | Minimum mapping quality for BAM filtering (default: 30) |
+| **genome_size** | `str` | MACS3 genome size string (`'hs'`, `'mm'`, or integer; default: `'hs'`) |
+| **qvalue** | `float` | MACS3 q-value cutoff (default: 0.05) |
+| **alpha** | `float` | FDR significance threshold (default: 0.05) |
+| **min_score** | `int` | Minimum parasail alignment score for linker matching (default: 20) |
+| **min_tag** | `int` | Minimum tag length after linker removal (default: 15) |
+| **max_tag** | `int` | Maximum tag length after linker removal (default: 40) |
+| **standard_chroms_only** | `bool` | Restrict loop calling to chr1-22 + chrX/Y (default: `True`) |
+| **cytoband_file** | `Optional[str]` | Path to UCSC cytoband file for centromere exclusion |
+| **keep_intermediates** | `bool` | Keep intermediate BAM files (default: `False`) |
+
+## Methods
+
+### run
+
+```python
+def run(
+    self,
+    fastq_r1: Optional[str] = None,
+    fastq_r2: Optional[str] = None,
+    output_dir: str = './results',
+    sample_id: str = 'sample',
+    start_from: int = 1,
+) -> Dict[str, Any]
+```
+
+Run the full ChIA-PET pipeline, or resume from a later step.
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **fastq_r1** | `Optional[str]` | Path to R1 FASTQ (required when `start_from<=1`) |
+| **fastq_r2** | `Optional[str]` | Path to R2 FASTQ (required when `start_from<=1`) |
+| **output_dir** | `str` | Root output directory (created if absent) (default: `'./results'`) |
+| **sample_id** | `str` | Sample name used as file prefix (default: `'sample'`) |
+| **start_from** | `int` | Step to resume from: 1=linker filtering, 2=mapping, 3=peak calling, 4=loop calling (default: 1) |
+
+**Returns:**
+
+`Dict[str, Any]` containing collected stats from every pipeline step + timing breakdown.
+
+**Example:**
+
+```python
+from chr3d.peak_based.chiapet_pipeline import ChiaPetPipeline
+
+pipeline = ChiaPetPipeline(
+    genome_index="/data/genomes/hg38.fa",
+    linkers=["AAGTGGTAGTGTGGTG", "CACTGTGGCTGTGTGG"],
+    threads=24,
+    mapq=30,
+    genome_size='hs',
+    qvalue=0.05,
+    alpha=0.05,
+)
+
+stats = pipeline.run(
+    fastq_r1="sample_R1.fastq.gz",
+    fastq_r2="sample_R2.fastq.gz",
+    output_dir="chiapet_results/",
+    sample_id="sample1",
+    start_from=1,
+)
+
+print(f"Peaks: {stats.get('peak_file', 'N/A')}")
+print(f"Significant loops: {stats.get('significant_loops', 'N/A')}")
+```

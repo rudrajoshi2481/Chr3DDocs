@@ -1,0 +1,34 @@
+---
+---
+
+# bedpe_to_bedpedb
+
+```python
+chr3d.utils.bedpe_to_bedpedb(
+    bedpe_path: str,
+    output_bedpedb: str,
+    assembly: str = "hg38",
+    importance_col: int = 8,
+    max_per_tile: int = 100,
+    tile_size: int = 1024,
+) -> str
+```
+
+Run `clodius aggregate bedpe` to produce a SQLite bedpedb file.
+
+Converts BEDPE to HiGlass-compatible bedpedb format for visualization as 1D arcs tracks.
+
+## Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **bedpe_path** | `str` | Path to input BEDPE file |
+| **output_bedpedb** | `str` | Path for output bedpedb file |
+| **assembly** | `str` | Genome assembly (default: `"hg38"`) |
+| **importance_col** | `int` | 1-based column index for importance score (default: 8 = score column) |
+| **max_per_tile** | `int` | Maximum entries per tile (default: 100) |
+| **tile_size** | `int` | Tile size in bp (default: 1024) |
+
+**Returns:**
+
+`str` — Path to output bedpedb file.

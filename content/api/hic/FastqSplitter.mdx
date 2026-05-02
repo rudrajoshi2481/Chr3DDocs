@@ -1,0 +1,65 @@
+---
+---
+
+# FastqSplitter
+
+```python
+class chr3d.FastqSplitter(
+    n_chunks: int = 10,
+    reads_per_chunk: Optional[int] = None,
+)
+```
+
+Split large FASTQ files into smaller chunks for parallel processing.
+
+Useful for processing very large Hi-C datasets by splitting into manageable chunks that can be processed in parallel.
+
+## Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **n_chunks** | `int` | Number of chunks to split into (default: 10) |
+| **reads_per_chunk** | `Optional[int]` | Reads per chunk (overrides `n_chunks` if set) |
+
+## Methods
+
+### split
+
+```python
+def split(
+    self,
+    fastq1: str,
+    fastq2: str,
+    output_dir: str,
+    prefix: str = "chunk",
+) -> List[Tuple[str, str]]
+```
+
+Split paired FASTQ files into chunks.
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **fastq1** | `str` | Path to R1 FASTQ file |
+| **fastq2** | `str` | Path to R2 FASTQ file |
+| **output_dir** | `str` | Output directory for chunks |
+| **prefix** | `str` | Prefix for chunk files (default: `'chunk'`) |
+
+**Returns:**
+
+`List[Tuple[str, str]]` — List of tuples `(chunk_r1, chunk_r2)` paths.
+
+**Example:**
+
+```python
+import chr3d as c3d
+
+splitter = c3d.FastqSplitter(n_chunks=10)
+chunks = splitter.split(
+    fastq1="sample_R1.fastq.gz",
+    fastq2="sample_R2.fastq.gz",
+    output_dir="split_fastq/"
+)
+print(f"Created {len(chunks)} chunk pairs")
+```

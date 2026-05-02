@@ -1,0 +1,47 @@
+---
+---
+
+# purify_bedpe
+
+```python
+def chr3d.peak_based.purifying.purify_bedpe(
+    bedpe_file: str,
+    fragment_index: FragmentIndex,
+    output_kept: str,
+    output_removed: str,
+    compute_inserts: bool = True,
+) -> Dict[str, Any]
+```
+
+Purify BEDPE file by removing reads from same-fragment PETs.
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **bedpe_file** | `str` | Input BEDPE file path |
+| **fragment_index** | `FragmentIndex` | Fragment index for overlap lookup |
+| **output_kept** | `str` | Output path for kept (purified) PETs |
+| **output_removed** | `str` | Output path for removed (same-fragment) PETs |
+| **compute_inserts** | `bool` | Compute insert sizes (default: `True`) |
+
+**Returns:**
+
+`Dict[str, Any]` with purification statistics.
+
+**Example:**
+
+```python
+from chr3d.peak_based.purifying import FragmentIndex, purify_bedpe
+
+frag_idx = FragmentIndex("restriction_fragments.bed")
+
+stats = purify_bedpe(
+    bedpe_file="dedup.bedpe",
+    fragment_index=frag_idx,
+    output_kept="purified.bedpe",
+    output_removed="removed.bedpe",
+)
+
+print(f"Kept: {stats['n_kept']}, Removed: {stats['n_removed']}")
+```

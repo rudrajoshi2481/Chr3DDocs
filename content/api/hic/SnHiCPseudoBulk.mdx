@@ -1,0 +1,55 @@
+---
+---
+
+import { Callout } from 'nextra/components'
+
+# SnHiCPseudoBulk
+
+```python
+class chr3d.SnHiCPseudoBulk(
+    threads: int = 1,
+)
+```
+
+Aggregate per-cell `.cool` matrices into a single pseudobulk matrix.
+
+Merges all passing-QC cell matrices into one combined contact matrix suitable for comparison with bulk Hi-C data.
+
+## Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **threads** | `int` | Number of threads for cooler operations (default: 1) |
+
+## Methods
+
+### aggregate
+
+```python
+def aggregate(
+    self,
+    cell_cool_files: List[str],
+    output_cool: str,
+    output_mcool: str,
+    resolutions: Optional[List[int]] = None,
+) -> Dict[str, Any]
+```
+
+Merge per-cell `.cool` files into a pseudobulk matrix.
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **cell_cool_files** | `List[str]` | List of paths to per-cell `.cool` files |
+| **output_cool** | `str` | Path for aggregated output `.cool` file |
+| **output_mcool** | `str` | Path for multi-resolution `.mcool` file |
+| **resolutions** | `Optional[List[int]]` | List of resolutions for zoomify (default: standard set) |
+
+**Returns:**
+
+`Dict[str, Any]` with aggregation statistics.
+
+<Callout type="warning">
+`aggregate` is not yet fully implemented and will raise `NotImplementedError`.
+</Callout>

@@ -1,0 +1,70 @@
+---
+---
+
+# chr3d digest
+
+```bash
+chr3d digest [OPTIONS] FASTA
+```
+
+Generate restriction fragment BED from a genome FASTA.
+
+In silico digest a genome FASTA with a restriction enzyme and output a BED file of fragments. This BED file can be passed to `bulk-hic` / `sn-hic` via `--fragment-bed` to enable fragment-aware pair parsing with pairtools.
+
+## Examples
+
+### Single Enzyme
+
+```bash
+chr3d digest -e MboI -o hg38_MboI.bed /data/genomes/hg38.fa
+```
+
+### Dual Enzyme (Arima Kit)
+
+```bash
+chr3d digest -e MboI -e GATC^ -o arima_frags.bed /data/genomes/hg38.fa
+```
+
+### Custom Recognition Site
+
+```bash
+chr3d digest -e A^AGCTT -o fragments.bed /data/genomes/hg38.fa
+```
+
+### With Size Filtering
+
+```bash
+chr3d digest -e HindIII --min-size 50 --max-size 500000 -o fragments.bed genome.fa
+```
+
+## Supported Enzymes
+
+| Enzyme | Recognition Site |
+|--------|-----------------|
+| `HindIII` | `A^AGCTT` |
+| `DpnII` | `^GATC` |
+| `MboI` | `^GATC` |
+| `BglII` | `A^GATCT` |
+| `Sau3AI` | `^GATC` |
+| `Hinf1` | `G^ANTC` |
+| `NlaIII` | `CATG^` |
+| `AluI` | `AG^CT` |
+| `EcoRI` | `G^AATTC` |
+| `BamHI` | `G^GATCC` |
+| `PstI` | `CTGCA^G` |
+| `SalI` | `G^TCGAC` |
+| `XbaI` | `T^CTAGA` |
+
+Or pass the raw recognition site with cut position, e.g., `A^AGCTT`.
+
+## Arguments
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `FASTA` | — | Genome FASTA file (plain or gzipped) |
+| `-e, --enzyme NAME_OR_SITE` | — | Enzyme name or recognition site. Repeat flag for multiple enzymes (Arima kit) |
+| `-o, --output BED` | — | Output BED file path |
+| `--min-size INT` | `20` | Minimum fragment size to keep (bp) |
+| `--max-size INT` | `10000000` | Maximum fragment size to keep (bp) |
+| `-v, --verbose` | — | Enable DEBUG-level logging |
+| `--log-file FILE` | — | Write log to FILE |

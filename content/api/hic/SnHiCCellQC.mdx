@@ -1,0 +1,53 @@
+---
+---
+
+import { Callout } from 'nextra/components'
+
+# SnHiCCellQC
+
+```python
+class chr3d.SnHiCCellQC(
+    min_contacts: int = 1000,
+    min_complexity: float = 0.3,
+    max_dup_rate: float = 0.8,
+)
+```
+
+Quality control for individual sn-Hi-C cells.
+
+Filters cells based on minimum contact counts and complexity metrics to remove low-quality cells before downstream analysis.
+
+## Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **min_contacts** | `int` | Minimum number of valid contacts required per cell (default: 1000) |
+| **min_complexity** | `float` | Minimum library complexity (unique / total reads ratio) (default: 0.3) |
+| **max_dup_rate** | `float` | Maximum duplicate rate allowed per cell (default: 0.8) |
+
+## Methods
+
+### filter_cells
+
+```python
+def filter_cells(
+    self,
+    cell_stats: Dict[str, Dict],
+) -> Tuple[List[str], List[str]]
+```
+
+Filter cells based on QC metrics.
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **cell_stats** | `Dict[str, Dict]` | Dict mapping `cell_id` → stats dict with keys: `'valid_contacts'`, `'duplicate_rate'`, `'complexity'` |
+
+**Returns:**
+
+`Tuple[List[str], List[str]]` — `(passing_cell_ids, failing_cell_ids)`
+
+<Callout type="warning">
+`filter_cells` is not yet fully implemented and will raise `NotImplementedError`.
+</Callout>

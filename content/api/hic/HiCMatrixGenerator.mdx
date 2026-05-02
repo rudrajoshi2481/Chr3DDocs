@@ -1,0 +1,122 @@
+---
+---
+
+# HiCMatrixGenerator
+
+```python
+class chr3d.HiCMatrixGenerator(
+    chrom_sizes: str,
+    assembly: str = 'hg38',
+    threads: int = 1,
+)
+```
+
+Contact matrix generation using cooler.
+
+Creates `.cool` and multi-resolution `.mcool` files from pairs.
+
+## Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **chrom_sizes** | `str` | Path to chromosome sizes file |
+| **assembly** | `str` | Genome assembly name (default: `'hg38'`) |
+| **threads** | `int` | Number of threads (default: 1) |
+
+## Methods
+
+### create
+
+```python
+def create(
+    self,
+    input_pairs: str,
+    output_cool: str,
+    resolution: int = 1000,
+) -> Dict[str, Any]
+```
+
+Create contact matrix from pairs.
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **input_pairs** | `str` | Path to filtered pairs file |
+| **output_cool** | `str` | Path to output `.cool` file |
+| **resolution** | `int` | Matrix resolution in bp (default: 1000) |
+
+**Returns:**
+
+`Dict[str, Any]` with keys:
+- `'output_cool'`: Path to output `.cool` file
+- `'cool_size_bytes'`: Size of cool file
+- `'resolution'`: Matrix resolution
+- `'num_contacts'`: Number of contacts
+
+### balance
+
+```python
+def balance(
+    self,
+    input_cool: str,
+    max_iters: int = 200,
+    cis_only: bool = True,
+) -> Dict[str, Any]
+```
+
+Balance contact matrix.
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **input_cool** | `str` | Path to `.cool` file |
+| **max_iters** | `int` | Maximum iterations (default: 200) |
+| **cis_only** | `bool` | Only balance cis contacts (default: `True`) |
+
+### zoomify
+
+```python
+def zoomify(
+    self,
+    input_cool: str,
+    output_mcool: str,
+    resolutions: List[int] = None,
+) -> Dict[str, Any]
+```
+
+Create multi-resolution `.mcool` file.
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **input_cool** | `str` | Path to `.cool` file |
+| **output_mcool** | `str` | Path to output `.mcool` file |
+| **resolutions** | `List[int]` | List of resolutions in bp (default: `[1000, 5000, 10000, 25000, 50000, 100000]`) |
+
+**Example:**
+
+```python
+import chr3d as c3d
+
+matrix = c3d.HiCMatrixGenerator(
+    chrom_sizes="/data/genomes/hg38.chrom.sizes",
+    assembly="hg38",
+    threads=24
+)
+
+# Create contact matrix
+stats = matrix.create(
+    input_pairs="filtered.pairs.gz",
+    output_cool="sample.cool"
+)
+
+# Create multi-resolution matrix
+matrix.zoomify(
+    input_cool="sample.cool",
+    output_mcool="sample.mcool",
+    resolutions=[1000, 5000, 10000, 25000, 50000, 100000]
+)
+```

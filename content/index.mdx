@@ -1,30 +1,54 @@
 ---
-title: Welcome
 ---
+**Chr3D** is a Python framework for 3D chromatin interaction analysis. Process Hi-C, ChIA-PET, and HiChIP data with a unified command-line interface and Python API.
 
 ```mdx
-
-	 ██████╗██╗  ██╗██████╗      ██████╗ ██████╗ 
-	██╔════╝██║  ██║██╔══██╗     ╚════██╗██╔══██╗
-	██║     ███████║██████╔╝        ██╔╝ ██║  ██║
-	██║     ██╔══██║██╔══██╗      ╚══██╗ ██║  ██║
-	╚██████╗██║  ██║██║  ██║     ██████╔╝██████╔╝
-	 ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝     ╚═════╝ ╚═════╝ 
-
-
+ ██████╗██╗  ██╗██████╗      ██████╗ ██████╗
+██╔════╝██║  ██║██╔══██╗     ╚════██╗██╔══██╗
+██║     ███████║██████╔╝        ██╔╝ ██║  ██║
+██║     ██╔══██║██╔══██╗      ╚══██╗ ██║  ██║
+╚██████╗██║  ██║██║  ██║     ██████╔╝██████╔╝
+ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝     ╚═════╝ ╚═════╝
 ```
 
-A doc site for Ch3d package, can process hichip chiapet hic piplines 
 
-## What's inside
+## Features
 
-- A clean CLI to run pipelines
-- API for custom piplines 
-- Python API for Downstream analysis
+### Command Line Interface
+Run complete pipelines with a single command:
+- `chr3d bulk-hic` - Bulk Hi-C processing
+- `chr3d sn-hic` - Single-nucleus Hi-C
+- `chr3d chia-pet` - ChIA-PET analysis
+- `chr3d hichip` - HiChIP pipeline
 
-# Add example of Higlass
+[View CLI Documentation →](/cli)
 
-## Next steps
+### Python API
+Build custom workflows with modular components:
+- Pipeline orchestrators
+- Alignment and processing tools
+- Matrix generation and analysis
+- Peak calling and loop detection
 
-- Read how to install the package
-- Also Look At our TUI Application for Chr3d
+[View API Documentation →](/api)
+
+### Visualization
+Export results for HiGlass and other genome browsers.
+
+![HiGlass Visualization](/higlass.png)
+
+## Quick Start
+
+```bash
+# Install
+pip install chr3d
+
+# Run a pipeline
+chr3d bulk-hic \
+    --r1 sample_R1.fastq.gz \
+    --r2 sample_R2.fastq.gz \
+    --genome hg38.fa \
+    --output-dir ./results
+```
+
+[Installation Guide →](/install)

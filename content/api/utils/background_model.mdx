@@ -1,0 +1,80 @@
+---
+---
+
+# Background Model Functions
+
+Import from `chr3d.peak_based.background_model`:
+
+## classify_pets
+
+```python
+from chr3d.peak_based.background_model import classify_pets
+
+classify_pets(
+    bedpe_path: str,
+    peaks_by_chr: Dict[str, List[Tuple[int, int]]],
+    peak_ids_by_chr: Dict[str, List[str]],
+    peaks_df: pl.DataFrame,
+) -> pl.DataFrame
+```
+
+Classify PETs by peak overlap (P2P / P2D / D2D).
+
+**Returns:** Polars DataFrame with classified PETs.
+
+## extract_templates
+
+```python
+from chr3d.peak_based.background_model import extract_templates
+
+extract_templates(
+    pets_df: pl.DataFrame,
+) -> List[Dict[str, Any]]
+```
+
+Build templates from cross-peak P2P PETs.
+
+## BackgroundSamplingPhase1
+
+```python
+from chr3d.peak_based.background_model import BackgroundSamplingPhase1
+
+sampler = BackgroundSamplingPhase1(
+    n_bootstrap: int = 1000,
+)
+
+nb_params = sampler.fit(
+    pets_df: pl.DataFrame,
+    templates: List[Dict],
+)
+```
+
+Sample background, fit Negative Binomial distribution.
+
+## calculate_pvalues
+
+```python
+from chr3d.peak_based.background_model import calculate_pvalues
+
+pvals = calculate_pvalues(
+    pets_df: pl.DataFrame,
+    nb_params: Dict,
+    templates: List[Dict],
+)
+```
+
+Compute PMF p-values for PETs.
+
+## apply_fdr_corrections
+
+```python
+from chr3d.peak_based.background_model import apply_fdr_corrections
+
+results = apply_fdr_corrections(
+    pvals: pl.DataFrame,
+    alpha: float = 0.05,
+    method: str = "fdr_bh",
+)
+```
+
+Apply multiple testing correction (Benjamini-Hochberg FDR or Bonferroni).
