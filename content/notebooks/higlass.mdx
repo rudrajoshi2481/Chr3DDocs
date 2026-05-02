@@ -1,0 +1,44 @@
+---
+title: Higlass
+---
+
+import { NotebookRenderer } from '@/components/notebook/NotebookRenderer'
+
+# Higlass
+
+The `<NotebookRenderer />` component reads a `.ipynb` file from `public/`
+and renders it as a static, read-only Jupyter-style document. Code is
+highlighted with [shiki](https://shiki.style/), markdown cells are rendered
+with `react-markdown`, and outputs (stdout, dataframes, plots, errors) are
+shown inline.
+
+## Usage
+
+```mdx filename="content/my-page.mdx"
+import { NotebookRenderer } from '@/components/notebook/NotebookRenderer'
+
+<NotebookRenderer src="/higlass_ipython.ipynb" />
+```
+
+## Live example
+
+Below is `public/higlass_ipython.ipynb` rendered with the component:
+
+<NotebookRenderer src="/higlass_ipython.ipynb" />
+
+## Supported outputs
+
+- `stream` — `stdout` and `stderr` text
+- `execute_result` / `display_data` for:
+  - `image/png` and `image/jpeg` (base64)
+  - `image/svg+xml`
+  - `text/html` (e.g. pandas DataFrames)
+  - `application/json`
+  - `text/plain` fallback
+- `error` — ANSI codes are stripped from tracebacks
+
+## Notes
+
+- Static renderer — cells are never executed.
+- Light and dark color schemes are applied automatically via
+  `prefers-color-scheme`.

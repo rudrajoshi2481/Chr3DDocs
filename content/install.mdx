@@ -1,0 +1,75 @@
+---
+title: Install
+---
+
+# Install
+
+Get the docs site running locally in a few steps.
+
+## Prerequisites
+
+- **Node.js** 18.17 or newer
+- **pnpm** (recommended), or npm / yarn / bun
+
+## 1. Install dependencies
+
+```bash filename="Terminal"
+pnpm install
+```
+
+This installs Next.js, React, Nextra, and the `nextra-theme-docs` package.
+
+## 2. Start the dev server
+
+```bash filename="Terminal"
+pnpm run dev
+```
+
+The site will be available at [http://localhost:3000](http://localhost:3000).
+
+## 3. Build for production
+
+```bash filename="Terminal"
+pnpm run build
+pnpm run start
+```
+
+## Project structure
+
+```text
+.
+├── app/
+│   ├── [[...mdxPath]]/
+│   │   └── page.tsx        # catch-all renders content/*.mdx
+│   ├── layout.tsx          # navbar, banner, footer, theme
+│   └── globals.css
+├── content/
+│   ├── index.mdx           # homepage
+│   └── install.mdx         # this page
+├── mdx-components.tsx      # MDX component overrides
+├── next.config.ts          # withNextra(...) wrapper
+└── package.json
+```
+
+## Adding a new page
+
+1. Create a new `.mdx` file inside `content/` — for example
+   `content/guides/setup.mdx`.
+2. The page will be served at `/guides/setup`.
+3. Optionally add a `_meta.js` file to control the sidebar order and titles.
+
+```js filename="content/_meta.js"
+export default {
+  index: 'Welcome',
+  install: 'Install',
+}
+```
+
+## Troubleshooting
+
+- **Blank page or 404**: make sure the catch-all route
+  `app/[[...mdxPath]]/page.tsx` exists and that `next-mdx-import-source-file`
+  in `next.config.ts` points at your `mdx-components.tsx`.
+- **Multiple lockfiles warning**: remove stray `package-lock.json` /
+  `pnpm-lock.yaml` files from parent directories, or set
+  `turbopack.root` in `next.config.ts`.

@@ -1,0 +1,550 @@
+/* ──────────────────────────────────────────────────────────────────────────
+ * Notebook renderer — VS Code Jupyter-inspired, breathable card layout.
+ *
+ * Theme: follows nextra-theme-docs / next-themes, which toggles `class="dark"`
+ * on the <html> element. Light is the default; dark styles live under
+ * `html.dark`.
+ * ──────────────────────────────────────────────────────────────────────── */
+
+.nb-root {
+  /* Light (default) */
+  --nb-fg:         #1f2328;
+  --nb-muted:      #6e7781;
+  --nb-subtle:     #8b949e;
+  --nb-border:     #d0d7de;
+  --nb-border-soft:#e6eaef;
+  --nb-surface:    #ffffff;
+  --nb-surface-2:  #f6f8fa;
+  --nb-accent:     #0969da;
+  --nb-md-bg:      #eef6ff;
+  --nb-md-fg:      #0969da;
+  --nb-lang-bg:    #f3f4f6;
+  --nb-lang-fg:    #57606a;
+  --nb-err-bg:     #ffebe9;
+  --nb-err-fg:     #cf222e;
+  --nb-err-border: #ffcecb;
+
+  --nb-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
+  --nb-radius: 8px;
+  --nb-radius-sm: 4px;
+
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  color: var(--nb-fg);
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 1.5rem 0;
+  /* No outer box — cells stand alone. */
+  background: transparent;
+  border: none;
+}
+
+html.dark .nb-root {
+  --nb-fg:         #e6edf3;
+  --nb-muted:      #8b949e;
+  --nb-subtle:     #6e7681;
+  --nb-border:     #30363d;
+  --nb-border-soft:#21262d;
+  --nb-surface:    #0d1117;
+  --nb-surface-2:  #161b22;
+  --nb-accent:     #58a6ff;
+  --nb-md-bg:      #0c2d6b;
+  --nb-md-fg:      #79c0ff;
+  --nb-lang-bg:    #21262d;
+  --nb-lang-fg:    #8b949e;
+  --nb-err-bg:     #2d1212;
+  --nb-err-fg:     #ff7b72;
+  --nb-err-border: #5a1d1d;
+}
+
+/* ── Optional top meta strip ───────────────────────────────────────────── */
+
+.nb-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.25rem 0.875rem;
+  font-size: 12px;
+  color: var(--nb-subtle);
+  font-family: var(--nb-mono);
+}
+
+.nb-meta-tag {
+  font-weight: 600;
+  color: var(--nb-muted);
+  text-transform: lowercase;
+}
+
+.nb-meta-sep { opacity: 0.6; }
+
+.nb-meta-file {
+  opacity: 0.8;
+}
+
+/* ── Cells list: breathing room between cells ─────────────────────────── */
+
+.nb-cells {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ── Single cell — its own card ───────────────────────────────────────── */
+
+.nb-cell {
+  position: relative;
+  background: var(--nb-surface);
+  border: 1px solid var(--nb-border);
+  border-radius: var(--nb-radius);
+  padding: 1rem 1.125rem 0.875rem;
+  transition: border-color 0.15s ease;
+}
+
+.nb-cell:hover {
+  border-color: color-mix(in srgb, var(--nb-accent) 45%, var(--nb-border));
+}
+
+/* Top-right action group: copy button + language/type badge. */
+.nb-cell-actions {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nb-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: var(--nb-radius-sm);
+  font-family: var(--nb-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Cells without an action group (markdown / raw) use an absolutely-positioned
+   badge directly. */
+.nb-cell--markdown > .nb-badge--md,
+.nb-cell--raw > .nb-badge--raw {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+}
+
+/* Copy button */
+.nb-copy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--nb-radius-sm);
+  background: transparent;
+  color: var(--nb-subtle);
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+.nb-copy:hover {
+  background: var(--nb-surface-2);
+  border-color: var(--nb-border-soft);
+  color: var(--nb-fg);
+}
+
+.nb-copy:focus-visible {
+  outline: 2px solid var(--nb-accent);
+  outline-offset: 2px;
+}
+
+.nb-copy--done {
+  color: #1a7f37;
+}
+
+html.dark .nb-copy--done {
+  color: #3fb950;
+}
+
+.nb-badge--md {
+  background: var(--nb-md-bg);
+  color: var(--nb-md-fg);
+}
+
+.nb-badge--lang {
+  background: var(--nb-lang-bg);
+  color: var(--nb-lang-fg);
+}
+
+.nb-badge--raw {
+  background: var(--nb-lang-bg);
+  color: var(--nb-lang-fg);
+}
+
+/* Execution-count prompt "In [1]" on the top-left, small & muted. */
+.nb-prompt {
+  position: absolute;
+  top: 12px;
+  left: 14px;
+  font-family: var(--nb-mono);
+  font-size: 11px;
+  color: var(--nb-subtle);
+  user-select: none;
+}
+
+.nb-prompt-num {
+  color: var(--nb-accent);
+  font-weight: 600;
+}
+
+/* Faint numeric index label (bottom-right, under the badge). */
+.nb-cell-index {
+  display: none; /* enabled only in compact mode if needed later */
+}
+
+/* ── Code source — no inner box, let the cell card hold everything ────── */
+
+.nb-cell--code {
+  padding-top: 2.25rem; /* leave room for the absolute prompt + badge */
+}
+
+.nb-source {
+  margin: 0;
+  font-family: var(--nb-mono);
+  font-size: 13px;
+  line-height: 1.55;
+  overflow-x: auto;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.nb-source pre {
+  margin: 0;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+.nb-source code {
+  background: transparent !important;
+  font-family: inherit;
+}
+
+/* Shiki dual-theme: use CSS vars set by `themes: { light, dark }`. */
+.nb-source .shiki,
+.nb-source .shiki span {
+  background-color: transparent !important;
+  color: var(--shiki-light) !important;
+  font-style: var(--shiki-light-font-style) !important;
+  font-weight: var(--shiki-light-font-weight) !important;
+  text-decoration: var(--shiki-light-text-decoration) !important;
+}
+
+html.dark .nb-source .shiki,
+html.dark .nb-source .shiki span {
+  color: var(--shiki-dark) !important;
+  font-style: var(--shiki-dark-font-style) !important;
+  font-weight: var(--shiki-dark-font-weight) !important;
+  text-decoration: var(--shiki-dark-text-decoration) !important;
+}
+
+/* ── Outputs: separated from the source with a subtle divider ──────────── */
+
+.nb-outputs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.875rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--nb-border-soft);
+}
+
+.nb-output {
+  margin: 0;
+  min-width: 0;
+  font-family: var(--nb-mono);
+  font-size: 13px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--nb-fg);
+}
+
+.nb-output--stderr,
+.nb-output--error {
+  color: var(--nb-err-fg);
+  background: var(--nb-err-bg);
+  border: 1px solid var(--nb-err-border);
+  border-radius: var(--nb-radius-sm);
+  padding: 0.5rem 0.75rem;
+}
+
+.nb-error-name {
+  font-weight: 700;
+}
+
+/* Image / SVG outputs: no padding wrapper, just the image */
+.nb-output--image,
+.nb-output--svg {
+  padding: 0;
+}
+
+/* HiGlass / Jupyter widget viewer */
+.nb-output--higlass {
+  padding: 0;
+  width: 100%;
+  border-radius: var(--nb-radius-sm);
+  overflow: hidden;
+  background: var(--nb-surface-2);
+  border: 1px solid var(--nb-border-soft);
+}
+
+/* Sandboxed iframe used for full-HTML-document outputs (e.g. HiGlass HTML
+   exports). Sized by the `HtmlFrame` component itself. */
+.nb-output--htmlframe {
+  padding: 0;
+  width: 100%;
+  border-radius: var(--nb-radius-sm);
+  overflow: hidden;
+  background: var(--nb-surface-2);
+  border: 1px solid var(--nb-border-soft);
+}
+
+/* Diagnostic shown when a `widget-view+json` output has no matching
+   widget-state entry (e.g. notebook saved without "Save Widget State"). */
+.nb-output--widget-missing {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem 1rem;
+  border: 1px dashed var(--nb-border);
+  border-radius: var(--nb-radius-sm);
+  background: var(--nb-surface-2);
+  color: var(--nb-muted);
+  font: 13px/1.5 var(--nb-sans, ui-sans-serif, system-ui, sans-serif);
+}
+
+.nb-output--widget-missing strong {
+  color: var(--nb-fg);
+  font-weight: 600;
+}
+
+.nb-output--widget-missing-hint {
+  font-size: 12px;
+}
+
+.nb-output--widget-missing-hint code {
+  font: 11.5px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  background: var(--nb-surface);
+  padding: 0 0.3em;
+  border-radius: 3px;
+}
+
+.nb-output--higlass-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  font: 13px/1.5 var(--nb-sans, ui-sans-serif, system-ui, sans-serif);
+  color: var(--nb-text-muted, #6b7280);
+}
+
+.nb-output--image img,
+.nb-output--svg svg {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--nb-radius-sm);
+  display: block;
+}
+
+/* HTML output (e.g. pandas DataFrame) — style tables neatly. */
+.nb-output--html {
+  overflow-x: auto;
+  font-size: 13px;
+}
+
+.nb-output--html table {
+  border-collapse: collapse;
+  margin: 0;
+  font-family: var(--nb-mono);
+  font-size: 12.5px;
+}
+
+.nb-output--html th,
+.nb-output--html td {
+  border: 1px solid var(--nb-border-soft);
+  padding: 4px 10px;
+  text-align: left;
+}
+
+.nb-output--html thead th {
+  background: var(--nb-surface-2);
+  color: var(--nb-fg);
+  font-weight: 600;
+}
+
+.nb-output--html tbody th {
+  background: var(--nb-surface-2);
+  color: var(--nb-muted);
+  font-weight: 500;
+}
+
+/* ── Markdown cells: no box, blends with page ─────────────────────────── */
+
+.nb-cell--markdown {
+  padding-top: 2rem; /* room for the MD badge */
+  background: transparent;
+  border: none;
+}
+
+.nb-cell--markdown:hover {
+  border-color: transparent;
+}
+
+.nb-prose {
+  color: var(--nb-fg);
+}
+
+.nb-prose > *:first-child { margin-top: 0; }
+.nb-prose > *:last-child  { margin-bottom: 0; }
+
+.nb-prose h1,
+.nb-prose h2,
+.nb-prose h3,
+.nb-prose h4,
+.nb-prose h5,
+.nb-prose h6 {
+  font-weight: 600;
+  line-height: 1.25;
+  margin: 1rem 0 0.5rem;
+  color: var(--nb-fg);
+}
+.nb-prose h1 { font-size: 1.6rem; letter-spacing: -0.01em; }
+.nb-prose h2 { font-size: 1.3rem; }
+.nb-prose h3 { font-size: 1.1rem; }
+.nb-prose h4 { font-size: 1rem; }
+
+.nb-prose p,
+.nb-prose ul,
+.nb-prose ol {
+  margin: 0.5rem 0;
+}
+
+.nb-prose ul,
+.nb-prose ol {
+  padding-left: 1.5rem;
+}
+
+.nb-prose li + li { margin-top: 0.25rem; }
+
+.nb-prose code {
+  font-family: var(--nb-mono);
+  font-size: 0.88em;
+  padding: 0.1em 0.4em;
+  background: var(--nb-surface-2);
+  border: 1px solid var(--nb-border-soft);
+  border-radius: 4px;
+  color: var(--nb-fg);
+}
+
+.nb-prose pre {
+  background: var(--nb-surface-2);
+  border: 1px solid var(--nb-border-soft);
+  border-radius: var(--nb-radius-sm);
+  padding: 0.625rem 0.875rem;
+  overflow-x: auto;
+  font-family: var(--nb-mono);
+  font-size: 13px;
+  margin: 0.75rem 0;
+}
+
+.nb-prose pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.nb-prose a {
+  color: var(--nb-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.nb-prose a:hover {
+  text-decoration-thickness: 2px;
+}
+
+.nb-prose blockquote {
+  margin: 0.75rem 0;
+  padding: 0.25rem 0 0.25rem 0.875rem;
+  border-left: 3px solid var(--nb-border);
+  color: var(--nb-muted);
+}
+
+.nb-prose hr {
+  border: none;
+  border-top: 1px solid var(--nb-border-soft);
+  margin: 1rem 0;
+}
+
+.nb-prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--nb-radius-sm);
+  display: block;
+  margin: 0.75rem 0;
+}
+
+.nb-prose table {
+  border-collapse: collapse;
+  margin: 0.75rem 0;
+  font-size: 13px;
+  width: 100%;
+}
+
+.nb-prose th,
+.nb-prose td {
+  border: 1px solid var(--nb-border-soft);
+  padding: 6px 10px;
+  text-align: left;
+}
+
+.nb-prose thead th {
+  background: var(--nb-surface-2);
+  font-weight: 600;
+}
+
+/* ── Small screens ─────────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .nb-cell {
+    padding: 0.875rem 0.875rem 0.75rem;
+  }
+  .nb-cell--code,
+  .nb-cell--markdown,
+  .nb-cell--raw {
+    padding-top: 2.25rem;
+  }
+  .nb-cell-actions {
+    top: 6px;
+    right: 8px;
+  }
+  .nb-cell--markdown > .nb-badge--md,
+  .nb-cell--raw > .nb-badge--raw {
+    top: 6px;
+    right: 8px;
+  }
+  .nb-prompt {
+    left: 10px;
+    top: 10px;
+  }
+}
