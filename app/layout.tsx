@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
 import { Footer, Layout, Navbar } from 'nextra-theme-docs'
-import { Banner, Head } from 'nextra/components'
+import { Head } from 'nextra/components'
 import { getPageMap } from 'nextra/page-map'
 import { Nanum_Pen_Script } from 'next/font/google'
 import 'nextra-theme-docs/style.css'
+import './globals.css'
 
 const nanumPenScript = Nanum_Pen_Script({
   weight: '400',
@@ -49,7 +50,7 @@ export default async function RootLayout({
       <Head>
         {/* Add favicons, custom <meta>, etc. as children of <Head> */}
       </Head>
-      <body>
+      <body >
         <Layout
           // banner={banner}
           navbar={navbar}

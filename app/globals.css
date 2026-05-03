@@ -1,6 +1,6 @@
-@import "tailwindcss";
+/* @import "tailwindcss"; */
 
-:root {
+/* :root {
   --background: #ffffff;
   --foreground: #171717;
 }
@@ -24,3 +24,25 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+ */
+
+/* Override Nextra's default content width constraints */
+:root {
+  --nextra-content-width: 100% !important;
+}
+
+/* Also target the article container directly */
+article.nextra-content {
+  max-width: 100% !important;
+}
+
+/* Main content wrapper */
+main.nextra-body {
+  max-width: 100% !important;
+}
+/* 
+.nextra-sidebar{
+  min-width: 280px !important;
+} */
+
+
