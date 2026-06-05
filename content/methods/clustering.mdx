@@ -1,0 +1,134 @@
+---
+---
+
+import { Callout, Steps } from 'nextra/components'
+
+# scHi-C Clustering
+
+To enable cell-type deconvolution from single-cell Hi-C (scHi-C) contact maps without requiring cell-type labels or imputation of missing contacts, Chr3D implements an **unsupervised clustering module** that combines coverage-normalized contact matrix construction, contrastive graph representation learning, and resolution-adaptive Leiden community detection.
+
+Rather than relying on data imputation or contact matrix enhancement strategies — which risk introducing systematic artifacts — Chr3D preserves the native sparsity of single-cell data.
+
+---
+
+## Input Formats
+
+Raw scHi-C data can be ingested in three ways:
+
+| Format | Description |
+|--------|-------------|
+| **Higashi text format** | Standard Higashi-compatible cell/contact text files |
+| **`.mcool`** | Multi-resolution cooler file |
+| **`.cool`** | Single-resolution cooler file |
+
+---
+
+## Pipeline
+
+<Steps>
+
+### Contact Matrix Construction and Normalization
+
+Contacts are binned at a user-specified resolution (default: 100 kb) using chromosome sizes from a UCSC-style `chrom.sizes` file.
+
+Only **cis-contacts** are used, and only the `pos1` (left fragment endpoint) coordinate is retained. This results in a raw `cells × bins` contact matrix.
+
+The matrix is then subject to a two-stage normalization:
+
+1. **Coverage normalization** — each cell's row is divided by its total contact count
+2. **Log₁₀(x + 1) transform** — quantizes values to the range [0, 255]
+
+This design choice — using a single fragment endpoint — preserves sparsity and avoids the signal dilution caused by including both endpoints (see [Results](/overview/results) for benchmark comparison).
+
+### High Variable Bin Filtering *(optional)*
+
+Top-K bins by variance are selected to reduce sparsity in the data. By default, this step is **disabled**.
+
+```python
+clustering = Chr3DCluster(use_hvg=True, n_top_bins=5000)
+```
+
+### TF-IDF Feature Transformation
+
+Prior to graph construction, a **Term Frequency–Inverse Document Frequency (TF-IDF)** transformation is applied — adapted from single-cell ATAC-seq practices.
+
+- TF: contact frequency of a bin within a cell
+- IDF: inverse of how many cells have non-zero contact at that bin
+
+The TF-IDF matrix is then:
+1. Standardized column-wise to zero mean and unit variance (scikit-learn `StandardScaler`)
+2. Reduced to **d_PCA = 50 dimensions** via PCA
+
+This transformation down-weights globally accessible genomic bins (which contribute little discriminatory power between cell types) while amplifying cell-type-specific contact enrichment signals.
+
+### KNN Cell Graph Construction
+
+A cell-level graph is constructed from the PCA-reduced embeddings by computing a **k-nearest neighbor (k=15 by default)** graph using Euclidean distance (scikit-learn `NearestNeighbors`).
+
+The resulting adjacency matrix is symmetrized to yield an undirected graph, ensuring the structural equivalence of neighboring cells is bidirectionally encoded.
+
+**Key parameters:**
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `k` | `15` | Number of nearest neighbors |
+
+### GraphSAGE Encoder with Contrastive Training
+
+A **GraphSAGE** (Graph Sample and Aggregate) encoder is trained using contrastive self-supervised learning. The model learns cell embeddings that capture both local contact patterns and graph neighborhood structure, without requiring cell-type labels.
+
+The contrastive objective encourages embeddings of neighboring cells (positive pairs) to be similar, while pushing non-neighboring cells (negative pairs) apart in the latent space.
+
+### Leiden Community Detection
+
+Cluster assignments are determined by running the **Leiden algorithm** on the learned embeddings. The resolution parameter controls granularity:
+
+- Higher resolution → more, smaller clusters
+- Lower resolution → fewer, larger clusters
+
+**Key parameters:**
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `resolution` | `0.15` | Leiden resolution parameter |
+| `n_clusters` | auto | Expected number of clusters (used to tune resolution) |
+
+</Steps>
+
+---
+
+## Benchmark Summary
+
+Chr3D was benchmarked against Higashi on a 5-cluster dataset (5 cell lines, 100k contacts). Using `pos1` alone achieves ARI = **0.8943**, matching Higashi performance while running end-to-end in ~5 minutes.
+
+| Variant | ARI | NMI | Total time |
+|---------|-----|-----|-----------|
+| pos1 | **0.8943** | 0.8659 | 288 s |
+| pos2 | **0.8943** | 0.8675 | 259 s |
+| both | 0.7167 | 0.8166 | 264 s |
+
+See [Results](/overview/results) for the full benchmark table including the PFC dataset.
+
+<Callout type="info">
+  The degradation when using `both` endpoints suggests that including the second fragment end introduces signal dilution rather than complementary context — consistent with the sparse and asymmetric nature of single-cell contact data.
+</Callout>
+
+---
+
+## Python API
+
+```python
+from chr3d.hic.clustering import Chr3DCluster
+
+model = Chr3DCluster(
+    resolution=100_000,       # bin size
+    k_neighbors=15,
+    leiden_resolution=0.15,
+    n_clusters=5,
+    use_hvg=False,
+)
+
+labels = model.fit_predict("cells.txt")   # Higashi format
+# or: model.fit_predict("data.mcool")
+# or: model.fit_predict("data.cool")
+```

@@ -1,54 +1,102 @@
 ---
 ---
-**Chr3D** is a Python framework for 3D chromatin interaction analysis. Process Hi-C, ChIA-PET, and HiChIP data with a unified command-line interface and Python API.
 
-```mdx
- ██████╗██╗  ██╗██████╗      ██████╗ ██████╗
-██╔════╝██║  ██║██╔══██╗     ╚════██╗██╔══██╗
-██║     ███████║██████╔╝        ██╔╝ ██║  ██║
-██║     ██╔══██║██╔══██╗      ╚══██╗ ██║  ██║
-╚██████╗██║  ██║██║  ██║     ██████╔╝██████╔╝
- ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝     ╚═════╝ ╚═════╝
-```
+import { Callout } from 'nextra/components'
 
+# Chr3D
 
-## Features
+**Chr3D** (Chromosome 3D Conformation Toolkit) is a unified Python framework for 3D chromatin interaction analysis. It provides end-to-end pipelines for **Hi-C**, **ChIA-PET**, and **HiChIP** data — including single-nucleus Hi-C — within a single, consistent environment.
 
-### Command Line Interface
-Run complete pipelines with a single command:
-- `chr3d bulk-hic` - Bulk Hi-C processing
-- `chr3d sn-hic` - Single-nucleus Hi-C
-- `chr3d chia-pet` - ChIA-PET analysis
-- `chr3d hichip` - HiChIP pipeline
+> *Rudhra Joshi · Yong Chen*
 
-[View CLI Documentation →](/cli)
+---
 
-### Python API
-Build custom workflows with modular components:
-- Pipeline orchestrators
-- Alignment and processing tools
-- Matrix generation and analysis
-- Peak calling and loop detection
+## Abstract
 
-[View API Documentation →](/api)
+Chromatin structural organization regulates gene expression and cellular function. Established protocols such as Hi-C, ChIA-PET, and HiChIP enable genome-wide mapping of chromatin interactions. While specialized pipelines exist for individual protocols, no single framework spans all three — nor is there a standard programming API or file-format convention that researchers can rely on.
 
-### Visualization
-Export results for HiGlass and other genome browsers.
+Chr3D addresses this by providing a unified framework with a consistent API design, harmonized data structures, and interoperable analysis modules across all three major techniques. Chr3D also introduces a novel **peak-anchored background model** in which P2P PET templates are evaluated against empirical Negative Binomial null distributions derived from 10,000 distance-matched random placements across non-peak genomic regions, with significance assessed via Benjamini–Hochberg FDR correction at α = 0.05. For single-cell Hi-C data, Chr3D provides a lightweight **unsupervised clustering module** combining TF-IDF-normalized contact matrices, GraphSAGE contrastive representation learning, and Leiden community detection to recover cell-type structure without imputation or labeled training data.
 
-![HiGlass Visualization](/higlass.png)
+Source code: [github.com/rudrajoshi2481/Chr3D](https://github.com/rudrajoshi2481/Chr3D)
+
+---
+
+## Pipeline Architecture
+
+The flowchart below illustrates how Chr3D organises its two main method families — peak-based (ChIA-PET, HiChIP) and non-peak-based (Hi-C, snHi-C) — and the steps within each pipeline.
+
+![Chr3D Pipeline Flowchart](/flowchart.png)
+
+---
+
+## Tool Comparison
+
+### Supported Assay Types
+
+| Feature | Chr3D | HiC-Pro | FitHiChIP | ChIA-PET Tool V3 | ChIA-PIPE | SnapHiC |
+|---------|:-----:|:-------:|:---------:|:----------------:|:---------:|:-------:|
+| Hi-C | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ |
+| HiChIP / PLAC-seq | ✓ | ~ | ✓ | ~ | ✗ | ✗ |
+| ChIA-PET | ✓ | ✗ | ✗ | ✓ | ✓ | ✗ |
+| Single-nucleus Hi-C | ✓ | ✗ | ✗ | ✗ | ✗ | ✓ |
+
+### Software & Usability
+
+| Feature | Chr3D | HiC-Pro | FitHiChIP | ChIA-PET Tool V3 | ChIA-PIPE | SnapHiC |
+|---------|:-----:|:-------:|:---------:|:----------------:|:---------:|:-------:|
+| Implementation language | Python | Python | R + Shell | Java | Bash + R | Python |
+| Programmatic Python API | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
+| pip / conda installable | ✓ | ✗ | ✗ | ✗ | ✗ | ~ |
+| Actively maintained (≥ 2023) | ✓ | ✓ | ✓ | ✗ | ✗ | ✗ |
+| Last known release | 2026 | v3.1 (2021) | v11.0 (2022) | 2019 | 2020 | v0.2 (2021) |
+
+---
 
 ## Quick Start
 
 ```bash
-# Install
-pip install chr3d
+# Clone and install
+git clone https://github.com/rudrajoshi2481/Chr3D.git
+cd Chr3D && chmod +x install.sh && ./install.sh
+conda activate chr3d
 
-# Run a pipeline
+# Run bulk Hi-C
 chr3d bulk-hic \
     --r1 sample_R1.fastq.gz \
     --r2 sample_R2.fastq.gz \
     --genome hg38.fa \
-    --output-dir ./results
+    --chrom-sizes hg38.chrom.sizes \
+    --output-dir ./results \
+    --sample-id my_sample
 ```
 
-[Installation Guide →](/install)
+```python
+import chr3d as c3d
+
+pipeline = c3d.HiCPipeline(
+    genome_index="hg38.fa",
+    chrom_sizes="hg38.chrom.sizes",
+    threads=16,
+)
+stats = pipeline.run(
+    fastq1="sample_R1.fastq.gz",
+    fastq2="sample_R2.fastq.gz",
+    output_dir="./results",
+    sample_id="my_sample",
+)
+```
+
+[Installation Guide →](/install) · [CLI Reference →](/cli) · [Python API →](/api)
+
+---
+
+## What Chr3D Provides
+
+| Area | Capability |
+|------|-----------|
+| **Hi-C & snHi-C** | Alignment → pairtools → cooler matrix → TADs, loops, A/B compartments |
+| **ChIA-PET** | Linker filtering (parasail SIMD) → mapping → MACS3 peaks → background model → significant loops |
+| **HiChIP** | Alignment → restriction-fragment purification → MACS3 peaks → background model → significant loops |
+| **Background model** | Negative Binomial null via 10k random D2D placements + BH-FDR correction |
+| **scHi-C clustering** | TF-IDF normalization → GraphSAGE contrastive learning → Leiden community detection |
+| **Visualization** | HiGlass-compatible `.beddb` export |

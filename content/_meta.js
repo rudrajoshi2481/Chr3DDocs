@@ -1,13 +1,30 @@
 export default {
-  index: 'Welcome',
-  install: 'Install',
-  cli: 'CLI Usage',
-  notebooks: {
-    title: 'Notebooks',
-    type: 'page'
+  index: {
+    title: 'Chr3D',
+    type: 'page',
+  },
+  install: {
+    title: 'Installation',
+    type: 'page',
+  },
+  overview: {
+    title: 'Overview',
+    type: 'page',
+  },
+  methods: {
+    title: 'Methods',
+    type: 'page',
+  },
+  cli: {
+    title: 'CLI Reference',
+    type: 'page',
   },
   api: {
     title: 'Python API',
-    type: 'page'
-  }
+    type: 'page',
+  },
+  notebooks: {
+    title: 'Notebooks',
+    type: 'page',
+  },
 }

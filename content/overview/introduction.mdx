@@ -1,0 +1,50 @@
+---
+---
+
+# Introduction
+
+## 3D Chromatin Organization and Gene Regulation
+
+The three-dimensional (3D) organization of chromatin plays a fundamental role in regulating gene expression, DNA replication, and genome stability. Spatial proximity between regulatory elements and their target genes, mediated by chromatin looping and higher-order structures, is essential for coordinated transcriptional programs. Disruption of chromatin architecture has been implicated in developmental disorders and cancer. Understanding the principles governing 3D genome organization requires comprehensive mapping of chromatin interactions at multiple scales — from individual protein-DNA contacts to chromosome-wide structural domains. Recent technological advances have enabled genome-wide profiling of these interactions, revealing cell-type-specific organizational patterns that correlate with cellular function.
+
+## Experimental Techniques
+
+Multiple experimental techniques have been developed to capture different aspects of chromatin 3D organization.
+
+**Hi-C** provides unbiased, genome-wide maps of all chromatin contacts through proximity ligation, enabling discovery of structural features such as topologically associating domains (TADs) and compartments.
+
+**ChIA-PET** (Chromatin Interaction Analysis by Paired-End Tag sequencing) enriches for interactions mediated by specific proteins, revealing protein-centric interaction networks at higher resolution.
+
+**HiChIP** combines chromatin immunoprecipitation with proximity ligation to map protein-associated chromatin loops with improved efficiency and lower input requirements.
+
+Each technique offers distinct advantages: Hi-C provides comprehensive structural context, ChIA-PET delivers high-resolution protein-specific interactions, and HiChIP balances resolution with experimental feasibility. Integrating data from multiple techniques provides complementary views of chromatin architecture.
+
+Techniques can also be categorised by their computational approach:
+
+- **Peak-based methods** (ChIA-PET, HiChIP) rely on a ChIP enrichment step to identify protein binding sites as high-confidence peak loci. They deliver high-precision connectivity between sites such as CTCF, ERα, RNAPII, and histone-marked regions.
+- **Non-peak-based methods** (Hi-C, snHi-C) are resolution-driven and capture all ligation products without antibody pulldown, enabling unbiased mapping of TADs, loops, and A/B compartments across the whole genome.
+
+## Fragmented Software Ecosystem
+
+Despite these technological advances, computational analysis of chromatin conformation data remains challenging due to a fragmented software ecosystem. Existing tools are typically designed for individual techniques:
+
+- **Juicer** — Hi-C analysis
+- **HiC-Pro** — Hi-C (Python + C++)
+- **ChIA-PET2** — ChIA-PET data processing
+
+Each tool employs different programming languages, dependency requirements, and file-format conventions, creating substantial barriers for researchers working with multiple assay types. Installation often requires complex environment configuration, and integrating results across techniques necessitates custom scripting and format conversions. This fragmentation limits accessibility — particularly for researchers without extensive computational expertise — and hinders multi-technique comparative studies that could provide deeper biological insights.
+
+| Limitation | Impact |
+|-----------|--------|
+| No unified processing model | Reproducibility is limited across experiments |
+| Incompatible file formats | Hard to compare results across techniques |
+| Per-tool dependencies | Introduces installation overhead and version conflicts |
+| No standard background model | Produces artifacts in loop significance testing |
+
+## Chr3D: A Unified Framework
+
+Here we present **Chr3D** (Chromosome 3D Conformation Toolkit), a unified Python framework that addresses these challenges by providing end-to-end analysis for Hi-C, ChIA-PET, and HiChIP data within a single, consistent environment. Chr3D adopts a design philosophy similar to [scanpy](https://scanpy.readthedocs.io) for single-cell RNA-seq analysis, offering modular components with harmonized APIs and data structures. By leveraging established tools such as [cooler](https://cooler.readthedocs.io) and [pairtools](https://pairtools.readthedocs.io) within an integrated architecture, Chr3D enables researchers to perform multi-technique studies with simplified installation, consistent workflows, and interoperable outputs.
+
+Chr3D also incorporates a **graph-based clustering module** for single-cell chromatin conformation analysis. Rather than relying on data imputation or contact matrix enhancement strategies — which risk introducing systematic artifacts — Chr3D constructs a bin-based matrix in which each cell is represented by genomic bins encoding positional information from a single fragment endpoint (`pos1`). This design choice preserves the native sparsity of single-cell data while minimizing assumptions about the underlying contact structure.
+
+Collectively, Chr3D addresses a longstanding gap in the chromatin conformation analysis landscape by consolidating alignment, normalization, structural feature calling, and graph-based clustering into a coherent ecosystem with harmonized APIs and interpretable data structures.

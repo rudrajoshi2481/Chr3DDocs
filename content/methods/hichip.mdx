@@ -1,0 +1,131 @@
+---
+---
+
+import { Callout, Steps } from 'nextra/components'
+
+# HiChIP Pipeline
+
+HiChIP is a **peak-based** proximity-ligation technique that combines chromatin immunoprecipitation with in situ ligation to map protein-associated chromatin loops with improved efficiency and lower input requirements compared to ChIA-PET. Unlike ChIA-PET, HiChIP does not require linker filtering — instead, a restriction fragment map is used during the purification step.
+
+```bash
+chr3d hichip \
+    --r1 sample_R1.fastq.gz \
+    --r2 sample_R2.fastq.gz \
+    --genome hg38.fa \
+    --fragments MboI_fragments.bed \
+    --output-dir ./results \
+    --sample-id h3k27ac_sample
+```
+
+---
+
+## Pipeline Overview
+
+<Steps>
+
+### FASTQ Splitting (Parallel Alignment)
+
+Input FASTQ files are split into `--n-chunks` balanced chunks. Each chunk is aligned independently, enabling parallel BWA jobs with threads split evenly across available cores.
+
+**Key parameters:**
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `--n-chunks` | `6` | Number of parallel BWA jobs |
+| `--threads` | `24` | Total CPU threads (split evenly across chunks) |
+
+### Mapping
+
+Paired-end reads in each chunk are aligned to the reference genome using BWA configured for Hi-C/HiChIP-style chimeric reads. Consistent with the ChIA-PET strategy:
+
+- Tags **< 55 bp** → `BWA-ALN SAMPE`
+- Tags **≥ 55 bp** → `BWA-MEM`
+
+Following alignment, mapping quality is assessed via `samtools flagstat`. Read pairs are filtered to minimum MAPQ 30, converted to **BEDPE** format using 5′-anchor coordinates, and deduplicated by exact position to remove PCR amplification artifacts.
+
+### BAM Merging
+
+Per-chunk BAMs are merged into a single deduplicated BEDPE file ready for purification.
+
+### Restriction Fragment Purification
+
+Because HiChIP libraries are generated via restriction enzyme-based proximity ligation rather than linker-mediated capture, an additional purification step removes spurious self-ligation and dangling-end products.
+
+Chr3D first generates (or loads) a genome-wide restriction fragment map via in silico digestion at the user-specified enzyme recognition motif, producing a sorted BED file of all fragment intervals. The fragment index is loaded into memory as chromosome-partitioned sorted arrays, enabling **O(log F)** overlap queries per read via binary search, where F is the number of fragments per chromosome.
+
+Each PET in the deduplicated BEDPE file is independently assigned to its overlapping restriction fragment using a local bisection search with a ±1 neighbour fallback for fragment boundary edge cases.
+
+**Retention rules:**
+- ✓ Both anchors map to **distinct** restriction fragments (same or different chromosome)
+- ✗ Both anchors on the **same** fragment → classified as self-ligation artifact, discarded
+- ✗ Combined insert size **< min threshold** (default 100 bp) → short-insert noise, discarded
+
+Per-category filtering statistics are recorded in the QC report.
+
+**Key parameters:**
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `--fragments` | required | Restriction fragment BED (generate with `chr3d digest`) |
+| `--min-insert` | `100` | Minimum insert size for purification (bp) |
+
+### Peak Calling
+
+Enriched anchor regions are identified using **MACS3 broad peak calling**, capturing protein-factor binding sites such as cohesin or CTCF occupancy that define the interaction anchors characteristic of HiChIP data.
+
+### Background Model & Loop Calling
+
+Purified PETs are classified and evaluated against an empirical Negative Binomial null distribution. See [Background Model](/methods/background-model) for full details.
+
+</Steps>
+
+---
+
+## Generating a Fragment BED
+
+Use the `chr3d digest` command to generate the restriction fragment file required by HiChIP:
+
+```bash
+chr3d digest hg38.fa --enzyme MboI -o MboI_fragments.bed
+
+# For Arima Hi-C (dual enzyme)
+chr3d digest hg38.fa --enzyme MboI --enzyme GATC^ -o arima_fragments.bed
+```
+
+Supported enzyme names: `HindIII`, `DpnII`, `MboI`, `BglII`, `Sau3AI`, `HinfI`, `NlaIII`, `AluI`, `EcoRI`, `BamHI`, `PstI`, `SalI`, `XbaI` — or pass a raw cut-site string (e.g. `A^AGCTT`).
+
+---
+
+## Output Layout
+
+```
+<output-dir>/
+├── chunks/              per-chunk FASTQ/BAM (removed unless --keep-intermediates)
+├── merged/              merged BAM
+├── bedpe/               deduplicated BEDPE
+├── purified/            purified BEDPE (post restriction-fragment filtering)
+├── peaks/               MACS3 broadPeak files
+├── loops/               significant_loops.csv
+└── qc/                  pipeline summary report
+```
+
+---
+
+## Resuming a Run
+
+| Step | Description |
+|------|-------------|
+| 1 | Split FASTQ |
+| 2 | Align chunks |
+| 3 | Merge BAMs |
+| 4 | BAM → BEDPE dedup |
+| 5 | MboI purification |
+| 6 | Background model |
+
+```bash
+chr3d hichip --start-from 5 ...   # resume from purification
+```
+
+<Callout type="info">
+  When resuming, outputs from prior steps must exist at canonical paths under `--output-dir`.
+</Callout>

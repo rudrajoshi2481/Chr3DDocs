@@ -1,4 +1,8 @@
 export default {
+  '-- bulk': {
+    type: 'separator',
+    title: 'Bulk Hi-C',
+  },
   HiCPipeline: 'HiCPipeline',
   HiCAligner: 'HiCAligner',
   HiCSamProcessor: 'HiCSamProcessor',
@@ -6,8 +10,12 @@ export default {
   HiCMatrixGenerator: 'HiCMatrixGenerator',
   HiCQCAnalyzer: 'HiCQCAnalyzer',
   FastqSplitter: 'FastqSplitter',
+  '-- sn': {
+    type: 'separator',
+    title: 'Single-Nucleus Hi-C',
+  },
   SnHiCPipeline: 'SnHiCPipeline',
   SnHiCCellQC: 'SnHiCCellQC',
   SnHiCPseudoBulk: 'SnHiCPseudoBulk',
-  SnHiCOutputStructure: 'Output Directory Structure',
+  SnHiCOutputStructure: 'Output Structure',
 }

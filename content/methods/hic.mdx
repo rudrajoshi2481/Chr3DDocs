@@ -1,0 +1,166 @@
+---
+---
+
+import { Callout, Steps } from 'nextra/components'
+
+# Hi-C & Single-Nucleus Hi-C
+
+Hi-C and single-nucleus Hi-C (snHi-C) are **non-peak-based** proximity ligation protocols that capture genome-wide chromatin contacts without enrichment for a specific protein factor. Because these assays do not employ antibody pulldown, all valid ligation products are retained, enabling unbiased mapping of the three-dimensional genome at population (bulk) or single-cell resolution.
+
+Chr3D implements both modalities through a unified modular pipeline built on [pairtools](https://pairtools.readthedocs.io) and [cooler](https://cooler.readthedocs.io).
+
+---
+
+## Bulk Hi-C
+
+```bash
+chr3d bulk-hic \
+    --r1 sample_R1.fastq.gz \
+    --r2 sample_R2.fastq.gz \
+    --genome hg38.fa \
+    --chrom-sizes hg38.chrom.sizes \
+    --restriction-enzyme MboI \
+    --output-dir ./results \
+    --sample-id my_sample \
+    --threads 16
+```
+
+<Steps>
+
+### Restriction Fragment Definition
+
+The Hi-C pipeline requires a genome-wide restriction fragment map derived from in silico digestion of the reference genome at the user-specified enzyme site. This BED-formatted fragment file serves to:
+- Annotate each read pair with the restriction fragment overlapped by each anchor
+- Identify self-ligation events where both anchors fall within the same fragment
+
+Read pairs mapping to chromosomes absent from the fragment map (e.g. decoy or alternative contigs) are removed prior to restriction annotation to ensure consistent chromosome naming.
+
+### Read Mapping
+
+Paired-end reads are aligned using a **Hi-C-optimised BWA configuration** that:
+- Disables mate rescue and paired-end heuristics
+- Prioritises the alignment with the smallest genomic coordinate as primary
+- Marks shorter split hits as secondary
+
+This setup handles chimeric ligation products and maintains compatibility with downstream pairtools processing. Low-quality alignments are removed using a minimum MAPQ threshold to retain only uniquely mappable read pairs.
+
+### Contact Pair Extraction and Filtering
+
+Valid chromatin contact pairs are extracted through a multi-step pairtools workflow:
+
+1. **Parsing** — read pairs parsed from name-sorted alignment, assigned to canonical chromosomes, annotated with pair type and per-mate MAPQ scores. When a restriction fragment map is provided, multi-ligation walk products are rescued rather than discarded.
+2. **Fragment annotation** — each pair annotated with overlapping restriction fragment identifiers, enabling same-fragment self-ligation detection.
+3. **Sorting** — pairs sorted by genome coordinates.
+4. **Deduplication** — PCR artifacts removed while recording duplication statistics.
+5. **Filtering** — only uniquely mapped, non-duplicate pairs in valid orientations retained.
+
+The final output is a high-confidence `.pairs.gz` file.
+
+### Contact Matrix Construction and Normalization
+
+Genome-wide contact matrices are constructed using **cooler** at kilobase-scale resolution:
+
+- Contacts aggregated into a sparse, binned matrix backed by HDF5
+- **ICE normalization** (iterative correction and eigenvector decomposition) corrects systematic biases from GC content, mappability, and restriction fragment length
+- The balanced base-resolution matrix is converted into a **multi-resolution `.mcool`** archive spanning bin sizes from 1 kb to 100 kb
+
+### TAD Calling (optional)
+
+Topologically associating domains are called using insulation score analysis via **cooltools**. Multiple window sizes can be specified simultaneously.
+
+```bash
+--tad-windows 30000,50000,100000,200000,500000,1000000
+```
+
+### Loop Calling (optional)
+
+Chromatin loops are called using cooltools loop-calling at each specified resolution.
+
+```bash
+--loop-fdr 0.1    # FDR threshold (default 0.1)
+--no-loops        # skip loop calling
+```
+
+### A/B Compartment Calling (optional)
+
+A/B compartments are determined via eigenvector decomposition of the observed/expected contact matrix. A phasing track (e.g. gene density BED) can be provided to orient the sign of E1.
+
+```bash
+--compartment-phasing-track gene_density.bed
+--no-compartments   # skip compartment calling
+```
+
+</Steps>
+
+### Output Layout
+
+```
+<output-dir>/
+├── aligned/         sorted BAM + flagstat
+├── pairs/           .pairs.gz files
+├── matrices/        .cool + .mcool
+├── tads/            TAD calls per window size (if enabled)
+├── loops/           loop calls per resolution (if enabled)
+└── compartments/    A/B compartment calls (if enabled)
+```
+
+### Resuming Bulk Hi-C
+
+| Step | Description |
+|------|-------------|
+| 1 | Alignment (BWA) |
+| 2 | SAM → sorted BAM |
+| 3 | Pairs (pairtools) |
+| 4 | Contact matrix (cooler) |
+| 5 | TAD calling |
+| 6 | Loop calling |
+| 7 | Compartment calling |
+
+```bash
+chr3d bulk-hic --start-from 4 ...   # resume from matrix generation
+```
+
+---
+
+## Single-Nucleus Hi-C (snHi-C)
+
+snHi-C runs the same modular pipeline independently for each cell in a manifest file, then aggregates passing cells into a pseudobulk contact matrix.
+
+```bash
+chr3d sn-hic \
+    --manifest cells.tsv \
+    --genome hg38.fa \
+    --chrom-sizes hg38.chrom.sizes \
+    --output-dir ./results \
+    --min-contacts 1000
+```
+
+**Manifest format** (tab-separated):
+
+```
+cell_id    R1.fastq.gz    R2.fastq.gz
+cell_001   cell001_R1.fastq.gz   cell001_R2.fastq.gz
+cell_002   cell002_R1.fastq.gz   cell002_R2.fastq.gz
+```
+
+### snHi-C Additional Steps
+
+After per-cell processing:
+
+- **Cell QC** — cells with fewer than `--min-contacts` valid contacts are filtered out
+- **Pseudobulk** — passing cells merged via `cooler merge` into a single `pseudobulk.cool` + `.mcool`
+
+### Output Layout
+
+```
+<output-dir>/
+├── cells/
+│   ├── cell_001/    per-cell BAM, pairs, .cool
+│   └── cell_002/
+├── pseudobulk/      pseudobulk.cool + pseudobulk.mcool
+└── qc/              cell_qc_summary.txt
+```
+
+<Callout type="info">
+  For graph-based unsupervised cell-type clustering from snHi-C contact maps, see [scHi-C Clustering](/methods/clustering).
+</Callout>
